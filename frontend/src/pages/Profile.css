@@ -1,0 +1,76 @@
+.profile-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Avatar Preview Container */
+.profile-image-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 4px solid rgba(74, 58, 255, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background-color: var(--secondary-color, #f5f6fa);
+}
+
+.profile-image-container:hover {
+  border-color: var(--primary-color, #4A3AFF);
+  transform: scale(1.03);
+}
+
+.profile-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-initials-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-color, #4A3AFF);
+  background: linear-gradient(135deg, rgba(74, 58, 255, 0.1), rgba(74, 58, 255, 0.05));
+}
+
+/* Camera Overlay on Hover */
+.avatar-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.profile-image-container:hover .avatar-edit-overlay {
+  opacity: 1;
+}
+
+.avatar-edit-overlay i {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+/* Readonly fields styling */
+.form-control[disabled] {
+  background-color: rgba(245, 246, 250, 0.5) !important;
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: rgba(226, 230, 238, 0.8);
+}

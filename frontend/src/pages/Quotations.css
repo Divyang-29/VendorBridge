@@ -1,0 +1,52 @@
+.comparison-header {
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.compare-matrix-wrapper {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.compare-column {
+  min-width: 250px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 24px;
+  background: white;
+  transition: var(--transition-smooth);
+}
+
+.compare-column.highlight-lowest {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.01);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.1);
+}
+
+.compare-column.highlight-fastest {
+  border-color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.01);
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.1);
+}
+
+.compare-highlight-label {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.bg-lowest {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.bg-fastest {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}

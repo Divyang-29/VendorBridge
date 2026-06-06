@@ -1,0 +1,22 @@
+# OS specific files
+.DS_Store
+Thumbs.db
+*.local
+
+# Node and dependency files
+node_modules/
+Backend/node_modules/
+frontend/node_modules/
+
+# Environment files
+.env
+Backend/.env
+frontend/.env
+
+# Local upload directories
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+
+# Production builds
+frontend/dist/
+frontend/dist-ssr/

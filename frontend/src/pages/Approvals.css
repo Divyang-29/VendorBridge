@@ -1,0 +1,48 @@
+.approval-timeline {
+  list-style: none;
+  padding: 0;
+  position: relative;
+}
+
+.approval-timeline:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 2px;
+  background-color: var(--border-light);
+}
+
+.timeline-event {
+  margin-bottom: 24px;
+  position: relative;
+  padding-left: 45px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 10px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: white;
+  border: 3px solid var(--primary-color);
+  z-index: 10;
+}
+
+.timeline-event.event-approved .timeline-dot {
+  border-color: #10b981;
+}
+
+.timeline-event.event-rejected .timeline-dot {
+  border-color: #ef4444;
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}

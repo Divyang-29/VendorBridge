@@ -1,0 +1,42 @@
+.vendor-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.vendor-search-card {
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.status-badge-interactive {
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.status-badge-interactive:hover {
+  filter: brightness(0.9);
+  transform: scale(1.05);
+}
+
+.vendor-form-container {
+  padding: 30px;
+  border-radius: 16px;
+  background-color: white;
+  margin-bottom: 24px;
+}
+
+.vendor-details-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px 24px;
+}
+
+.details-label {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.details-value {
+  color: var(--text-dark);
+}

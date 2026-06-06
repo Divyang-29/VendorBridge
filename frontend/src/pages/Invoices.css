@@ -1,0 +1,26 @@
+.invoice-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 992px) {
+  .invoice-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.invoice-preview-card {
+  padding: 30px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.invoice-billing-box {
+  background-color: var(--secondary-color);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}

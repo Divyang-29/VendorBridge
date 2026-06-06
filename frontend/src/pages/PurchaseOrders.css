@@ -1,0 +1,25 @@
+.po-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 992px) {
+  .po-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.po-details-card {
+  padding: 30px;
+  border-radius: 16px;
+  background-color: white;
+}
+
+.po-item-summary {
+  background-color: rgba(74, 58, 255, 0.02);
+  border: 1px dashed rgba(74, 58, 255, 0.1);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
