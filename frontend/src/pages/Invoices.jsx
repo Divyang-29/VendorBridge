@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import api from "../utils/api";
+import api, { BASE_URL } from "../utils/api";
 import "./Invoices.css";
 
 const Invoices = () => {
@@ -38,7 +38,7 @@ const Invoices = () => {
         setCustomEmail(res.invoice.vendorId?.email || "");
       }
     } catch (err) {
-      setError("Failed to fetch detailed billing specifications");
+      setError("Failed to fetch invoice details");
     }
   };
 
@@ -47,18 +47,30 @@ const Invoices = () => {
   }, []);
 
   const handleDownloadPDF = async (id, invoiceNumber) => {
-    setError("");
-    setSuccessMsg("");
     try {
-      const blob = await api.download(`/invoices/${id}/pdf`);
+      setError("");
+      setSuccessMsg("Generating audited PDF invoice...");
+      const token = localStorage.getItem("vendorbridge_token");
+      const res = await fetch(`${BASE_URL}/invoices/${id}/download`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("PDF download failed");
+      }
+
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Invoice-${invoiceNumber}.pdf`);
+      link.setAttribute("download", `TAX_INVOICE_${invoiceNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
-      setSuccessMsg("Invoice PDF downloaded successfully!");
+      setSuccessMsg("Audited Tax Invoice PDF downloaded successfully!");
     } catch (err) {
       setError(err.message || "Failed to download PDF invoice");
     }
@@ -76,7 +88,7 @@ const Invoices = () => {
       });
 
       if (res.success) {
-        setSuccessMsg(`Invoice emailed successfully to ${customEmail}`);
+        setSuccessMsg(`Tax invoice dispatched to ${customEmail} with official PDF attachment.`);
         setShowEmailInput(false);
       }
     } catch (err) {
@@ -92,7 +104,7 @@ const Invoices = () => {
     try {
       const res = await api.patch(`/invoices/${id}/status`, { status });
       if (res.success) {
-        setSuccessMsg(`Invoice payment status updated to: ${status.toUpperCase()}`);
+        setSuccessMsg(`Invoice payment status reconciled to: [${status.toUpperCase()}]`);
         fetchInvoiceDetails(id);
         fetchInvoices();
       }
@@ -105,215 +117,255 @@ const Invoices = () => {
 
   return (
     <div className="invoices-page">
-      {error && <div className="alert alert-danger py-2 small">{error}</div>}
-      {successMsg && <div className="alert alert-success py-2 small">{successMsg}</div>}
+      {/* Alerts */}
+      {error && (
+        <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+          <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+      {successMsg && (
+        <div className="alert alert-success py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-check me-2"></i>{successMsg}</span>
+          <button onClick={() => setSuccessMsg("")} className="btn-close" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+
+      {/* Header Bar */}
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div>
+          <h4 className="fw-bold mb-0 text-dark">Invoicing & Settlement Center</h4>
+          <span className="text-mono-xs text-muted">
+            AUDITED TAX INVOICES // GST RECONCILIATION & E-WAY BILL MATCHING
+          </span>
+        </div>
+        <span className="badge-industrial badge-hold">
+          {invoices.length} TAX INVOICES RECORDED
+        </span>
+      </div>
 
       <div className="invoice-layout">
         {/* Left Side: Directory listings */}
-        <div className="mb-4">
-          <div className="glass-panel p-4">
-            <h5 className="fw-bold mb-4">Invoice Ledger</h5>
-            {loading && invoices.length === 0 ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : invoices.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-premium align-middle">
-                  <thead>
-                    <tr>
-                      <th>Invoice Number</th>
-                      <th>Ref PO</th>
-                      <th>Total Billing</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((inv) => (
-                      <tr
-                        key={inv._id}
-                        onClick={() => fetchInvoiceDetails(inv._id)}
-                        className={`cursor-pointer ${selectedInvoice?._id === inv._id ? "table-active" : ""}`}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <td className="py-3 fw-bold text-primary">{inv.invoiceNumber}</td>
-                        <td className="py-3 fw-semibold">{inv.poId?.poNumber}</td>
-                        <td className="py-3 fw-bold text-success">₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="py-3">
-                          <span
-                            className={`badge ${
-                              inv.status === "paid"
-                                ? "bg-success-subtle text-success"
-                                : inv.status === "cancelled"
-                                ? "bg-danger-subtle text-danger"
-                                : "bg-warning-subtle text-warning"
-                            }`}
-                          >
-                            {inv.status?.replace("_", " ")}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center text-muted py-5">
-                <i className="fa-regular fa-folder-open fs-2 mb-3 d-block text-muted"></i>
-                No Invoices generated yet. Deliver POs to generate billing invoices.
-              </div>
-            )}
+        <div className="vendor-grid-wrapper">
+          <div className="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <h6 className="fw-bold mb-0 text-dark">Invoice Ledger Directory</h6>
+            <span className="text-mono-xs text-muted">SELECT TO RECONCILE</span>
           </div>
+          {loading && invoices.length === 0 ? (
+            <div className="text-center py-5">
+              <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                <span className="visually-hidden">Loading ledger...</span>
+              </div>
+            </div>
+          ) : invoices.length > 0 ? (
+            <div className="table-responsive">
+              <table className="table-industrial">
+                <thead>
+                  <tr>
+                    <th>Invoice Code</th>
+                    <th>Reference PO</th>
+                    <th>Gross Billing</th>
+                    <th className="text-end">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((inv) => (
+                    <tr
+                      key={inv._id}
+                      onClick={() => fetchInvoiceDetails(inv._id)}
+                      className={`cursor-pointer ${selectedInvoice?._id === inv._id ? "bg-light" : ""}`}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td className="font-mono text-dark fw-bold">{inv.invoiceNumber}</td>
+                      <td>
+                        <span className="font-mono text-muted small">{inv.poId?.poNumber || "PO-N/A"}</span>
+                      </td>
+                      <td className="font-mono-numbers fw-bold text-dark">
+                        ₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-end">
+                        <span
+                          className={`badge-industrial ${
+                            inv.status === "paid"
+                              ? "badge-verified"
+                              : inv.status === "cancelled"
+                              ? "badge-risk"
+                              : "badge-pending"
+                          }`}
+                        >
+                          {inv.status?.replace("_", " ")}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center text-muted py-5">
+              <i className="fa-solid fa-file-invoice fs-3 mb-2 d-block text-muted"></i>
+              No Tax Invoices generated in current cycle.
+            </div>
+          )}
         </div>
 
         {/* Right Side: Detailed Invoice Specs */}
-        <div className="mb-4">
+        <div>
           {selectedInvoice ? (
-            <div className="glass-panel invoice-preview-card animate-fade-in">
-              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4">
+            <div className="invoice-preview-card animate-fade-in">
+              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
                 <div>
-                  <span className="text-muted small">Invoice Reference:</span>
-                  <h4 className="fw-bold text-dark mb-0">{selectedInvoice.invoiceNumber}</h4>
+                  <span className="text-mono-xs text-muted d-block">TAX INVOICE RECORD</span>
+                  <h5 className="fw-bold text-dark font-mono mb-0">{selectedInvoice.invoiceNumber}</h5>
                 </div>
                 <span
-                  className={`badge fs-6 py-2 px-3 ${
+                  className={`badge-industrial ${
                     selectedInvoice.status === "paid"
-                      ? "bg-success text-white"
+                      ? "badge-verified"
                       : selectedInvoice.status === "cancelled"
-                      ? "bg-danger text-white"
-                      : "bg-warning text-dark"
+                      ? "badge-risk"
+                      : "badge-pending"
                   }`}
                 >
                   {selectedInvoice.status?.replace("_", " ").toUpperCase()}
                 </span>
               </div>
 
-              {/* Billing Info */}
+              {/* Billing Meta */}
               <div className="invoice-billing-box">
-                <div className="row small">
-                  <div className="col-6 mb-2">
-                    <span className="text-muted d-block small">Issuer / Supplier:</span>
-                    <strong>{selectedInvoice.vendorId?.vendorName}</strong>
-                    <div className="text-muted">{selectedInvoice.vendorId?.email}</div>
-                    <div className="text-muted">GST: {selectedInvoice.vendorId?.gstNumber}</div>
+                <div className="row g-2 small">
+                  <div className="col-md-6">
+                    <span className="text-mono-xs text-muted d-block">ISSUING SUPPLIER ENTITY</span>
+                    <strong className="text-dark small d-block">{selectedInvoice.vendorId?.vendorName}</strong>
+                    <span className="text-mono-xs text-muted d-block">{selectedInvoice.vendorId?.email}</span>
+                    <span className="text-mono-xs text-dark font-mono">GSTIN: {selectedInvoice.vendorId?.gstNumber}</span>
                   </div>
-                  <div className="col-6 mb-2 text-end">
-                    <span className="text-muted d-block small">Billing Dates:</span>
-                    <div>Issued: {new Date(selectedInvoice.createdAt).toLocaleDateString()}</div>
-                    <div>Ref PO: {selectedInvoice.poId?.poNumber}</div>
+                  <div className="col-md-6 text-md-end">
+                    <span className="text-mono-xs text-muted d-block">BILLING REFERENCES</span>
+                    <div className="text-mono-xs text-dark font-mono">
+                      ISSUED: {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                    <div className="text-mono-xs text-muted font-mono">CONTRACT: {selectedInvoice.poId?.poNumber}</div>
+                    <div className="text-mono-xs text-dark font-mono">TERMS: NET 30 DAYS</div>
                   </div>
                 </div>
               </div>
 
               {/* Items Table */}
-              <h6 className="fw-bold text-primary mb-3">Billing Invoice Items</h6>
-              <div className="table-responsive mb-4">
-                <table className="table table-sm align-middle">
-                  <thead>
-                    <tr>
-                      <th>Item</th>
+              <span className="text-mono-xs text-muted d-block mb-1">INVOICED LINE ITEMS</span>
+              <div className="table-responsive mb-3 border rounded-1 bg-white">
+                <table className="table table-sm align-middle mb-0">
+                  <thead className="bg-light">
+                    <tr className="text-mono-xs text-muted">
+                      <th>Description</th>
                       <th className="text-center">Qty</th>
-                      <th className="text-end">Price</th>
-                      <th className="text-end">Total</th>
+                      <th className="text-end">Rate</th>
+                      <th className="text-end">Subtotal</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedInvoice.items?.map((item, idx) => (
-                      <tr key={idx}>
-                        <td className="small">{item.itemName}</td>
-                        <td className="small text-center">{item.quantity}</td>
-                        <td className="small text-end">₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="small text-end fw-semibold">₹{item.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <tr key={idx} className="small">
+                        <td className="text-dark fw-semibold">{item.itemName}</td>
+                        <td className="font-mono text-center">{item.quantity}</td>
+                        <td className="font-mono-numbers text-end">₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                        <td className="font-mono-numbers text-end fw-bold">₹{item.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Financial Totals */}
+              {/* Calculation Summary */}
               <div className="d-flex flex-column align-items-end mb-4 border-bottom pb-3">
-                <div className="d-flex justify-content-between w-50 mb-1">
-                  <span className="text-muted small">Subtotal:</span>
-                  <span className="fw-semibold small">₹{(selectedInvoice.totalAmount - selectedInvoice.taxAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className="d-flex justify-content-between w-75 mb-1 small">
+                  <span className="text-muted">Taxable Base Amount:</span>
+                  <span className="font-mono-numbers text-dark">
+                    ₹{(selectedInvoice.totalAmount - selectedInvoice.taxAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <div className="d-flex justify-content-between w-50 mb-2">
-                  <span className="text-muted small">GST Tax (18%):</span>
-                  <span className="fw-semibold small">₹{selectedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className="d-flex justify-content-between w-75 mb-2 small">
+                  <span className="text-muted">GST Tax (18% Statutory Levy):</span>
+                  <span className="font-mono-numbers text-dark">
+                    ₹{selectedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <div className="d-flex justify-content-between w-50 pt-2 border-top">
-                  <strong className="text-dark">Grand Total:</strong>
-                  <strong className="text-success fs-5">₹{selectedInvoice.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                <div className="d-flex justify-content-between w-75 pt-2 border-top">
+                  <strong className="text-dark">Gross Payable Invoice:</strong>
+                  <strong className="font-mono-numbers text-dark fs-5">
+                    ₹{selectedInvoice.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </strong>
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="d-flex justify-content-end gap-2 flex-wrap mb-3">
-                <button
-                  onClick={() => handleDownloadPDF(selectedInvoice._id, selectedInvoice.invoiceNumber)}
-                  className="btn btn-primary-custom"
-                >
-                  <i className="fa-solid fa-file-pdf me-2"></i> Download Invoice PDF
-                </button>
-                {isProcurement && (
-                  <button
-                    onClick={() => setShowEmailInput(!showEmailInput)}
-                    className="btn btn-secondary-custom"
-                  >
-                    <i className="fa-solid fa-envelope me-2"></i> Email Invoice
-                  </button>
-                )}
-              </div>
-
-              {/* Email dispatch panel */}
-              {showEmailInput && (
-                <div className="card p-3 border-0 bg-light rounded-4 mb-4 animate-fade-in">
-                  <form onSubmit={handleSendEmail} className="d-flex gap-2">
-                    <input
-                      type="email"
-                      className="form-control form-control-sm"
-                      placeholder="recipient@supplier.com"
-                      value={customEmail}
-                      onChange={(e) => setCustomEmail(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className="btn btn-sm btn-primary-custom flex-shrink-0"
-                      disabled={emailLoading}
-                    >
-                      {emailLoading ? "Dispatching..." : "Send"}
-                    </button>
-                  </form>
-                </div>
-              )}
-
-              {/* Payment updates */}
-              {isProcurement && selectedInvoice.status === "pending_payment" && (
-                <div className="border-top pt-4">
-                  <h6 className="fw-bold mb-3">Account Reconciliation Actions</h6>
+              {/* Actions & Dispatch */}
+              <div className="d-flex flex-column gap-3">
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div className="d-flex gap-2">
                     <button
-                      onClick={() => handlePaymentStatusChange(selectedInvoice._id, "paid")}
-                      className="btn btn-sm btn-success rounded-pill px-4"
+                      onClick={() => handleDownloadPDF(selectedInvoice._id, selectedInvoice.invoiceNumber)}
+                      className="btn-secondary-industrial"
                     >
-                      <i className="fa-solid fa-check me-2"></i> Reconcile / Mark as Paid
+                      <i className="fa-solid fa-file-pdf text-danger me-1"></i>
+                      Download Tax PDF
                     </button>
                     <button
-                      onClick={() => handlePaymentStatusChange(selectedInvoice._id, "cancelled")}
-                      className="btn btn-sm btn-outline-danger rounded-pill px-4"
+                      onClick={() => setShowEmailInput(!showEmailInput)}
+                      className="btn-secondary-industrial"
                     >
-                      <i className="fa-solid fa-xmark me-2"></i> Void / Cancel Invoice
+                      <i className="fa-solid fa-envelope me-1"></i>
+                      Dispatch via SMTP
                     </button>
                   </div>
+
+                  {/* Payment Reconciliation for Procurement/Manager */}
+                  {isProcurement && selectedInvoice.status === "unpaid" && (
+                    <button
+                      onClick={() => handlePaymentStatusChange(selectedInvoice._id, "paid")}
+                      className="btn-primary-industrial"
+                      style={{ backgroundColor: "var(--status-verified)", borderColor: "var(--status-verified)" }}
+                    >
+                      <i className="fa-solid fa-check-double me-1"></i>
+                      Reconcile & Mark Paid
+                    </button>
+                  )}
                 </div>
-              )}
+
+                {/* Email dispatch drawer */}
+                {showEmailInput && (
+                  <form onSubmit={handleSendEmail} className="p-3 bg-light border rounded-1 animate-fade-in">
+                    <span className="text-mono-xs text-muted d-block mb-1">DISPATCH TAX INVOICE VIA NODEMAILER</span>
+                    <div className="input-group input-group-sm mb-2">
+                      <span className="input-group-text bg-white text-muted">@</span>
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="finance@supplier.com"
+                        value={customEmail}
+                        onChange={(e) => setCustomEmail(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className="btn-primary-industrial"
+                        disabled={emailLoading}
+                      >
+                        {emailLoading ? "Dispatching..." : "Send Attachment"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="glass-panel p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
-              <i className="fa-solid fa-file-invoice-dollar fs-3 text-purple mb-3"></i>
-              <h5>Select an Invoice from the directory list to review specs, download PDF, or dispatch emails.</h5>
+            <div className="industrial-card p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
+              <i className="fa-solid fa-file-invoice-dollar fs-3 text-muted mb-2"></i>
+              <h6 className="fw-semibold text-dark">Select a Tax Invoice</h6>
+              <span className="text-mono-xs text-muted">AUDIT BILLABLE LINE ITEMS, GENERATE OFFICIAL PDF, OR RECONCILE PAYMENT</span>
             </div>
           )}
         </div>

@@ -80,8 +80,18 @@ const Sidebar = () => {
   return (
     <div className={`sidebar-container ${expanded ? "sidebar-expanded" : "sidebar-collapsed"}`}>
       <div className="sidebar-header">
-        {expanded && <h5 className="brand-title">VendorBridge</h5>}
-        <button onClick={handleToggle} className="toggle-btn" title={expanded ? "Collapse menu" : "Expand menu"}>
+        {expanded ? (
+          <div className="brand-wrapper">
+            <h5 className="brand-title">
+              <span className="brand-symbol">VB</span>
+              Vendor Bridge
+            </h5>
+            <span className="brand-subtag">Procurement // Core ERP</span>
+          </div>
+        ) : (
+          <span className="brand-symbol">VB</span>
+        )}
+        <button onClick={handleToggle} className="toggle-btn" title={expanded ? "Collapse menu" : "Expand menu"} aria-label="Toggle navigation menu">
           <i className={`fa-solid ${expanded ? "fa-angle-left" : "fa-bars"}`}></i>
         </button>
       </div>

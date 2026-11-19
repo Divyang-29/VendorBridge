@@ -62,10 +62,9 @@ const Approvals = () => {
       });
 
       if (res.success) {
-        setSuccessMsg(`Proposal successfully ${modalAction === "approve" ? "approved" : "rejected"}`);
+        setSuccessMsg(`Proposal decision recorded: [${modalAction.toUpperCase()}]. Workflow closed.`);
         setShowActionModal(false);
         setRemarks("");
-        // Reload details and list
         fetchApprovalDetails(selectedApproval._id);
         fetchApprovals();
       }
@@ -78,77 +77,97 @@ const Approvals = () => {
 
   return (
     <div className="approvals-page">
-      {error && <div className="alert alert-danger py-2 small">{error}</div>}
-      {successMsg && <div className="alert alert-success py-2 small">{successMsg}</div>}
+      {/* Alerts */}
+      {error && (
+        <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+          <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+      {successMsg && (
+        <div className="alert alert-success py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-check me-2"></i>{successMsg}</span>
+          <button onClick={() => setSuccessMsg("")} className="btn-close" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
 
-      <div className="row">
-        {/* Left Side: Approvals List */}
-        <div className="col-lg-5 mb-4">
-          <div className="glass-panel p-4 h-100">
-            <h5 className="fw-bold mb-4">Pending Approvals Directory</h5>
+      <div className="row g-3">
+        {/* Left Side: Approvals Queue */}
+        <div className="col-lg-5">
+          <div className="approval-list-card">
+            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <div>
+                <span className="text-mono-xs text-muted d-block">MANAGERIAL QUEUE</span>
+                <h6 className="fw-bold mb-0 text-dark">Procurement Approvals & Authorizations</h6>
+              </div>
+              <span className="text-mono-xs text-muted">{approvals.length} CASES</span>
+            </div>
+
             {loading && approvals.length === 0 ? (
               <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
+                <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span className="visually-hidden">Loading queue...</span>
                 </div>
               </div>
             ) : approvals.length > 0 ? (
-              <div className="list-group">
+              <div className="d-flex flex-column gap-2">
                 {approvals.map((app) => (
                   <button
                     key={app._id}
                     onClick={() => fetchApprovalDetails(app._id)}
-                    className={`list-group-item list-group-item-action border-0 p-3 mb-2 rounded glass-panel text-start ${
-                      selectedApproval?._id === app._id ? "border-start border-primary border-3 bg-white" : "bg-light"
-                    }`}
+                    className={`approval-item-btn ${selectedApproval?._id === app._id ? "selected" : ""}`}
                   >
-                    <div className="d-flex justify-content-between mb-1">
-                      <span className="fw-bold text-primary small">{app.rfqId?.rfqNumber}</span>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="font-mono text-dark fw-bold small">{app.rfqId?.rfqNumber}</span>
                       <span
-                        className={`badge ${
+                        className={`badge-industrial ${
                           app.status === "approved"
-                            ? "bg-success-subtle text-success"
+                            ? "badge-verified"
                             : app.status === "rejected"
-                            ? "bg-danger-subtle text-danger"
-                            : "bg-warning-subtle text-warning"
+                            ? "badge-risk"
+                            : "badge-pending"
                         }`}
                       >
                         {app.status?.replace("_", " ").toUpperCase()}
                       </span>
                     </div>
-                    <h6 className="fw-semibold text-dark text-truncate mb-1">{app.rfqId?.title}</h6>
-                    <div className="d-flex justify-content-between text-muted small mt-2">
-                      <span>Bid: ₹{app.quotationId?.totalPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span>By: {app.submittedBy?.name}</span>
+                    <div className="fw-semibold text-dark text-truncate small mb-1">{app.rfqId?.title}</div>
+                    <div className="d-flex justify-content-between align-items-center text-muted small mt-2 pt-1 border-top">
+                      <span className="font-mono-numbers fw-semibold text-dark">
+                        ₹{app.quotationId?.totalPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-mono-xs">By: {app.submittedBy?.name}</span>
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
               <div className="text-center text-muted py-5">
-                <i className="fa-solid fa-circle-check fs-2 text-success mb-3 d-block"></i>
-                All clear! No approval requests waiting review.
+                <i className="fa-solid fa-circle-check fs-3 text-muted mb-2 d-block"></i>
+                <p className="mb-0 fw-semibold text-dark small">All approval queues cleared.</p>
+                <span className="text-mono-xs text-muted">NO PENDING DECISION CASES</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Right Side: Selected Approval Details & Actions */}
-        <div className="col-lg-7 mb-4">
+        <div className="col-lg-7">
           {selectedApproval ? (
-            <div className="glass-panel p-4 animate-fade-in">
-              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4">
+            <div className="industrial-card p-4 animate-fade-in">
+              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
                 <div>
-                  <span className="text-muted small">RFQ Reference: {selectedApproval.rfqId?.rfqNumber}</span>
+                  <span className="text-mono-xs text-muted d-block">CASE: {selectedApproval._id.substring(18).toUpperCase()}</span>
                   <h5 className="fw-bold text-dark mb-0">{selectedApproval.rfqId?.title}</h5>
+                  <span className="text-mono-xs text-muted">RFQ REF: {selectedApproval.rfqId?.rfqNumber}</span>
                 </div>
                 <span
-                  className={`badge fs-6 py-2 px-3 ${
+                  className={`badge-industrial ${
                     selectedApproval.status === "approved"
-                      ? "bg-success text-white"
+                      ? "badge-verified"
                       : selectedApproval.status === "rejected"
-                      ? "bg-danger text-white"
-                      : "bg-warning text-dark"
+                      ? "badge-risk"
+                      : "badge-pending"
                   }`}
                 >
                   {selectedApproval.status?.replace("_", " ").toUpperCase()}
@@ -156,107 +175,127 @@ const Approvals = () => {
               </div>
 
               {/* Quotation Bid summary */}
-              <div className="card p-3 border-0 bg-light rounded-4 mb-4">
-                <h6 className="fw-bold text-primary mb-3">Recommended Quotation Bidding</h6>
-                <div className="row mb-2">
+              <div className="p-3 bg-light border rounded-1 mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                  <span className="text-mono-xs text-muted">RECOMMENDED SUPPLIER PROPOSAL</span>
+                  <span className="badge-industrial badge-accent">
+                    {selectedApproval.quotationId?.vendorId?.category || "Industrial"}
+                  </span>
+                </div>
+                <div className="row g-2 mb-2">
                   <div className="col-6">
-                    <span className="text-muted small">Supplier:</span>
-                    <strong className="d-block text-dark">{selectedApproval.quotationId?.vendorId?.vendorName}</strong>
+                    <span className="text-mono-xs text-muted d-block">SUPPLIER ENTITY</span>
+                    <strong className="text-dark small">{selectedApproval.quotationId?.vendorId?.vendorName}</strong>
                   </div>
                   <div className="col-6">
-                    <span className="text-muted small">Estimated Delivery:</span>
-                    <strong className="d-block text-dark">{selectedApproval.quotationId?.deliveryTimeline}</strong>
+                    <span className="text-mono-xs text-muted d-block">DELIVERY TIMELINE</span>
+                    <strong className="text-dark font-mono small">{selectedApproval.quotationId?.deliveryTimeline}</strong>
                   </div>
                 </div>
-                <div className="row mb-3">
+                <div className="row g-2 mb-3">
                   <div className="col-6">
-                    <span className="text-muted small">Total Price Bid:</span>
-                    <strong className="d-block text-success fs-5">₹{selectedApproval.quotationId?.totalPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                    <span className="text-mono-xs text-muted d-block">GROSS COMMERCIAL BID</span>
+                    <strong className="text-dark font-mono-numbers fs-6">
+                      ₹{selectedApproval.quotationId?.totalPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </strong>
                   </div>
                   <div className="col-6">
-                    <span className="text-muted small">Supplier Category:</span>
-                    <strong className="d-block text-dark">{selectedApproval.quotationId?.vendorId?.category}</strong>
+                    <span className="text-mono-xs text-muted d-block">SUBMITTED BY</span>
+                    <span className="text-dark small">{selectedApproval.submittedBy?.name} ({selectedApproval.submittedBy?.email})</span>
                   </div>
                 </div>
 
-                <h7 className="fw-semibold text-dark mb-2">Items Specifications Detail:</h7>
-                <ul className="list-unstyled mb-0">
+                <span className="text-mono-xs text-muted d-block mb-1">LINE ITEM AUDIT SPECIFICATIONS</span>
+                <div className="bg-white border rounded-1 p-2">
                   {selectedApproval.quotationId?.items?.map((item, idx) => (
-                    <li key={idx} className="small mb-1 d-flex justify-content-between border-bottom pb-1">
-                      <span>{item.itemName}</span>
-                      <span className="fw-semibold">
-                        {item.quantity} x ₹{item.price?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} = ₹{item.subtotal?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <div key={idx} className="bid-item-row small">
+                      <span className="text-dark fw-semibold">{item.itemName}</span>
+                      <span className="font-mono text-muted">
+                        {item.quantity} x ₹{item.price?.toLocaleString("en-IN", { minimumFractionDigits: 2 })} = ₹{item.subtotal?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Workflow history timeline */}
+              <div className="mb-4">
+                <span className="text-mono-xs text-muted d-block mb-1">AUDITABLE WORKFLOW TRAIL</span>
+                <ul className="approval-timeline">
+                  {selectedApproval.timeline?.map((evt, idx) => (
+                    <li
+                      key={idx}
+                      className={`timeline-event ${
+                        evt.status === "approved"
+                          ? "event-approved"
+                          : evt.status === "rejected"
+                          ? "event-rejected"
+                          : ""
+                      }`}
+                    >
+                      <div className="timeline-dot"></div>
+                      <div className="timeline-content">
+                        <strong className="small text-dark text-capitalize">
+                          {evt.status?.replace("_", " ")}
+                        </strong>
+                        <span className="text-muted small d-block">
+                          By: {evt.updatedBy?.name} [{evt.updatedBy?.role?.toUpperCase()}]
+                        </span>
+                        {evt.remarks && (
+                          <div className="p-2 my-1 bg-light border rounded-1 small text-secondary">
+                            "{evt.remarks}"
+                          </div>
+                        )}
+                        <span className="timeline-time">
+                          {new Date(evt.timestamp).toLocaleString("en-IN")}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Workflow timeline */}
-              <h6 className="fw-bold mb-3 text-primary">Workflow History Timeline</h6>
-              <ul className="approval-timeline mb-4">
-                {selectedApproval.timeline?.map((evt, idx) => (
-                  <li
-                    key={idx}
-                    className={`timeline-event ${
-                      evt.status === "approved"
-                        ? "event-approved"
-                        : evt.status === "rejected"
-                        ? "event-rejected"
-                        : ""
-                    }`}
-                  >
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content">
-                      <strong className="small text-dark text-capitalize">
-                        {evt.status?.replace("_", " ")}
-                      </strong>
-                      <span className="text-muted small d-block">
-                        By: {evt.updatedBy?.name} ({evt.updatedBy?.role})
-                      </span>
-                      {evt.remarks && <p className="small text-muted mb-0 italic mt-1">"{evt.remarks}"</p>}
-                      <span className="timeline-time">
-                        {new Date(evt.timestamp).toLocaleString()}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Actions Box */}
+              {/* Decision Action Buttons */}
               {isManager && selectedApproval.status === "pending_approval" && (
-                <div className="border-top pt-4 d-flex justify-content-end gap-2">
+                <div className="border-top pt-3 d-flex justify-content-end gap-2">
                   <button
                     onClick={() => handleOpenActionModal("reject")}
-                    className="btn btn-danger-custom btn-secondary-custom text-danger border-danger border-opacity-25"
+                    className="btn-secondary-industrial text-danger"
                   >
-                    <i className="fa-solid fa-xmark me-2"></i> Reject Proposal
+                    <i className="fa-solid fa-xmark me-1"></i> Reject Proposal
                   </button>
                   <button
                     onClick={() => handleOpenActionModal("approve")}
-                    className="btn btn-primary-custom"
+                    className="btn-primary-industrial"
+                    style={{ backgroundColor: "var(--status-verified)", borderColor: "var(--status-verified)" }}
                   >
-                    <i className="fa-solid fa-check me-2"></i> Approve Proposal & Close RFQ
+                    <i className="fa-solid fa-check me-1"></i> Authorize & Approve Purchase
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="glass-panel p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
-              <i className="fa-solid fa-arrow-left fs-3 text-primary mb-3"></i>
-              <h5>Select an approval request to view workflow specs and submit decisions.</h5>
+            <div className="industrial-card p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
+              <i className="fa-solid fa-arrow-left fs-3 text-muted mb-2"></i>
+              <h6 className="fw-semibold text-dark">Select a procurement approval case</h6>
+              <span className="text-mono-xs text-muted">INSPECT COMMERCIAL TERMS, BOQ SPECS, AND DECISION AUDIT</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal for Remarks and Review Submission */}
+      {/* Decision Modal */}
       {showActionModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(15,23,42,0.6)" }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content glass-panel border-0">
-              <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold text-dark text-capitalize">{modalAction} Proposal</h5>
+            <div className="modal-content industrial-card border">
+              <div className="modal-header py-3 px-4 bg-light border-bottom">
+                <div>
+                  <span className="text-mono-xs text-muted d-block">MANAGERIAL DECISION</span>
+                  <h6 className="modal-title fw-bold text-dark text-capitalize mb-0">
+                    {modalAction} Procurement Proposal
+                  </h6>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
@@ -264,32 +303,36 @@ const Approvals = () => {
                 ></button>
               </div>
               <form onSubmit={handleProcessApproval}>
-                <div className="modal-body py-4">
+                <div className="modal-body p-4">
                   <div className="mb-3">
-                    <label className="form-label small">Review Comments / Remarks</label>
+                    <label className="form-label small">Official Audit Comments & Justification</label>
                     <textarea
-                      className="form-control"
+                      className="form-control form-control-sm"
                       rows="4"
-                      placeholder={`Provide remarks for this ${modalAction} decision...`}
+                      placeholder={`Document the operational justification for this ${modalAction} authorization...`}
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
                       required
                     ></textarea>
                   </div>
                 </div>
-                <div className="modal-footer border-top-0 pt-0 d-flex justify-content-end gap-2">
+                <div className="modal-footer py-2 px-4 bg-light border-top d-flex justify-content-end gap-2">
                   <button
                     type="button"
                     onClick={() => setShowActionModal(false)}
-                    className="btn btn-secondary-custom"
+                    className="btn-secondary-industrial"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className={`btn ${modalAction === "approve" ? "btn-success" : "btn-danger"} rounded-pill px-4`}
+                    className="btn-primary-industrial"
+                    style={{
+                      backgroundColor: modalAction === "approve" ? "var(--status-verified)" : "var(--status-risk)",
+                      borderColor: modalAction === "approve" ? "var(--status-verified)" : "var(--status-risk)",
+                    }}
                   >
-                    Confirm {modalAction === "approve" ? "Approval" : "Rejection"}
+                    Confirm {modalAction === "approve" ? "Authorization" : "Rejection"}
                   </button>
                 </div>
               </form>

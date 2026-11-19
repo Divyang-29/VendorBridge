@@ -5,17 +5,15 @@ const ActivityLog = require("../models/ActivityLog");
 // ======================================
 const getActivityLogs = async (req, res) => {
   try {
-    // Only Admin, Procurement or Manager can view activity audit logs
-    if (req.user.role === "vendor") {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied: You are not authorized to view activity logs",
-      });
-    }
-
     const { page = 1, limit = 20, entityType, action } = req.query;
 
     const query = {};
+
+    // If role is vendor, scope logs to vendor's user ID
+    if (req.user.role === "vendor") {
+      query.userId = req.user.userId;
+    }
+
     if (entityType) {
       query.entityType = entityType;
     }

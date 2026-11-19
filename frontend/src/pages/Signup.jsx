@@ -38,21 +38,22 @@ const Signup = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h2 className="auth-logo">VendorBridge</h2>
-          <p className="auth-subtitle">Procurement & Vendor Management ERP</p>
+          <span className="auth-system-tag">REGISTRATION // ENTERPRISE DIRECTORY</span>
+          <h2 className="auth-logo">Vendor Bridge</h2>
+          <p className="auth-subtitle">Operational B2B Procurement & Supplier Management</p>
         </div>
 
         {error && <div className="alert alert-danger py-2 small">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <h4 className="fw-bold mb-4">Create Account</h4>
+          <h4 className="fw-bold mb-4">Create Enterprise Account</h4>
 
           <div className="mb-3">
             <label className="form-label">Full Name</label>
             <input
               type="text"
               className="form-control"
-              placeholder="John Doe"
+              placeholder="e.g. Rajesh Sharma"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -60,11 +61,11 @@ const Signup = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">Corporate Email Address</label>
             <input
               type="email"
               className="form-control"
-              placeholder="john@company.com"
+              placeholder="r.sharma@enterprise.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

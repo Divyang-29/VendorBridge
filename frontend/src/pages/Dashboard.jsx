@@ -32,215 +32,284 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="spinner-border spinner-border-sm text-secondary" role="status">
+          <span className="visually-hidden">Loading telemetry...</span>
         </div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="alert alert-danger">{error}</div>;
+    return (
+      <div className="alert alert-danger py-2 px-3 small border-0 rounded-1" role="alert">
+        <i className="fa-solid fa-triangle-exclamation me-2"></i>
+        {error}
+      </div>
+    );
   }
 
   const isVendor = user?.role === "vendor";
 
   return (
     <div className="dashboard-container">
-      {/* Welcome banner */}
-      <div className="glass-panel p-4 mb-4 d-flex justify-content-between align-items-center">
+      {/* Operational Telemetry Banner */}
+      <div className="system-status-banner">
         <div>
-          <h3 className="fw-bold mb-1">Welcome back, {user?.name}!</h3>
-          <p className="text-muted mb-0">
-            Monitor and coordinate your organization's procurement cycle from one centralized console.
+          <div className="system-status-meta mb-1">
+            <span className="system-status-indicator">
+              <span className="system-pulse"></span>
+              SYS OPERATIONAL
+            </span>
+            <span className="text-mono-xs text-muted">
+              INSTANCE: VB-PROD-AP1 // ROLE: [{user?.role?.toUpperCase()}]
+            </span>
+          </div>
+          <h3 className="system-status-title">
+            Welcome, {user?.name || "Procurement Officer"}
+          </h3>
+          <p className="system-status-desc">
+            Centralized procurement control tower for RFQ bidding, supplier compliance, and ledger reconciliation.
           </p>
         </div>
-        <div className="d-none d-md-block">
-          <span className="badge bg-primary px-3 py-2 fs-6">Role: {user?.role?.toUpperCase()}</span>
+        <div className="d-flex align-items-center gap-3">
+          <div className="text-end d-none d-md-block">
+            <span className="text-mono-xs text-muted d-block">ACTIVE FISCAL PERIOD</span>
+            <span className="font-mono-numbers fw-semibold text-dark">FY 2026-Q3</span>
+          </div>
+          <span className="badge-industrial badge-accent">
+            CYCLE RUNNING
+          </span>
         </div>
       </div>
 
-      {/* Stats Cards grid */}
+      {/* Operational KPI Grid */}
       <div className="dashboard-grid">
-        {/* Card 1: Active RFQs */}
-        <div className="glass-panel stat-card stat-blue">
-          <div className="stat-content">
-            <p className="stat-label">Active RFQs</p>
-            <h3 className="stat-value">{metrics?.activeRFQsCount || 0}</h3>
+        {/* KPI 1: Active RFQs */}
+        <div className="stat-card-industrial">
+          <div className="stat-card-header">
+            <span className="stat-label-industrial">Active RFQs</span>
+            <i className="fa-solid fa-file-contract stat-icon-industrial"></i>
           </div>
-          <div className="stat-icon-wrapper">
-            <i className="fa-solid fa-file-signature"></i>
+          <h3 className="stat-value-industrial">{metrics?.activeRFQsCount || 0}</h3>
+          <div className="stat-trend">
+            <i className="fa-solid fa-clock-rotate-left"></i>
+            <span>Current bidding round</span>
           </div>
         </div>
 
-        {/* Card 2: Pending Items */}
+        {/* KPI 2: Pending Approvals / Bids */}
         {!isVendor ? (
-          <div className="glass-panel stat-card stat-purple">
-            <div className="stat-content">
-              <p className="stat-label">Pending Approvals</p>
-              <h3 className="stat-value">{metrics?.pendingApprovalsCount || 0}</h3>
+          <div className="stat-card-industrial">
+            <div className="stat-card-header">
+              <span className="stat-label-industrial">Pending Approvals</span>
+              <i className="fa-solid fa-stamp stat-icon-industrial"></i>
             </div>
-            <div className="stat-icon-wrapper">
-              <i className="fa-solid fa-stamp"></i>
+            <h3 className="stat-value-industrial">{metrics?.pendingApprovalsCount || 0}</h3>
+            <div className="stat-trend">
+              <i className="fa-solid fa-user-check"></i>
+              <span>Awaiting manager sign-off</span>
             </div>
           </div>
         ) : (
-          <div className="glass-panel stat-card stat-purple">
-            <div className="stat-content">
-              <p className="stat-label">Pending Bids</p>
-              <h3 className="stat-value">{metrics?.pendingQuotationsCount || 0}</h3>
+          <div className="stat-card-industrial">
+            <div className="stat-card-header">
+              <span className="stat-label-industrial">Pending Bids</span>
+              <i className="fa-solid fa-tags stat-icon-industrial"></i>
             </div>
-            <div className="stat-icon-wrapper">
-              <i className="fa-solid fa-tags"></i>
+            <h3 className="stat-value-industrial">{metrics?.pendingQuotationsCount || 0}</h3>
+            <div className="stat-trend">
+              <i className="fa-solid fa-hourglass-half"></i>
+              <span>Awaiting evaluation</span>
             </div>
           </div>
         )}
 
-        {/* Card 3: Spend / Revenue */}
-        <div className="glass-panel stat-card stat-green">
-          <div className="stat-content">
-            <p className="stat-label">{isVendor ? "Total Revenue" : "Total Spend"}</p>
-            <h3 className="stat-value">
-              ₹{(isVendor ? metrics?.totalRevenue : metrics?.totalSpend)?.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "0.00"}
-            </h3>
+        {/* KPI 3: Spend / Revenue */}
+        <div className="stat-card-industrial">
+          <div className="stat-card-header">
+            <span className="stat-label-industrial">{isVendor ? "Total Invoiced Revenue" : "Total Procurement Spend"}</span>
+            <i className="fa-solid fa-indian-rupee-sign stat-icon-industrial"></i>
           </div>
-          <div className="stat-icon-wrapper">
-            <i className="fa-solid fa-sack-dollar"></i>
+          <h3 className="stat-value-industrial">
+            ₹{(isVendor ? metrics?.totalRevenue : metrics?.totalSpend)?.toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }) || "0.00"}
+          </h3>
+          <div className="stat-trend">
+            <i className="fa-solid fa-receipt"></i>
+            <span>Reconciled orders</span>
           </div>
         </div>
 
-        {/* Card 4: Reference Metric */}
-        {!isVendor && (
-          <div className="glass-panel stat-card stat-orange">
-            <div className="stat-content">
-              <p className="stat-label">Registered Vendors</p>
-              <h3 className="stat-value">{metrics?.totalVendors || 0}</h3>
+        {/* KPI 4: Registered Vendors / POs */}
+        {!isVendor ? (
+          <div className="stat-card-industrial">
+            <div className="stat-card-header">
+              <span className="stat-label-industrial">Supplier Registry</span>
+              <i className="fa-solid fa-truck-ramp-box stat-icon-industrial"></i>
             </div>
-            <div className="stat-icon-wrapper">
-              <i className="fa-solid fa-users-gear"></i>
+            <h3 className="stat-value-industrial">{metrics?.totalVendors || 0}</h3>
+            <div className="stat-trend">
+              <i className="fa-solid fa-shield-halved"></i>
+              <span>Audited B2B suppliers</span>
+            </div>
+          </div>
+        ) : (
+          <div className="stat-card-industrial">
+            <div className="stat-card-header">
+              <span className="stat-label-industrial">Purchase Contracts</span>
+              <i className="fa-solid fa-cart-flatbed stat-icon-industrial"></i>
+            </div>
+            <h3 className="stat-value-industrial">{metrics?.recentPOs?.length || 0}</h3>
+            <div className="stat-trend">
+              <i className="fa-solid fa-handshake"></i>
+              <span>Active delivery terms</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Quick Action Buttons */}
-      <h5 className="fw-bold mb-3">Quick Actions</h5>
-      <div className="quick-actions-row">
-        {user?.role === "procurement" && (
-          <>
-            <Link to="/rfqs" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-plus-circle"></i></div>
-              <h6 className="fw-bold mb-1">Create RFQ</h6>
-              <p className="text-muted small mb-0">Request quotes from vendor partners</p>
-            </Link>
-            <Link to="/vendors" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-user-plus"></i></div>
-              <h6 className="fw-bold mb-1">Register Vendor</h6>
-              <p className="text-muted small mb-0">Onboard new supplier details</p>
-            </Link>
-            <Link to="/quotations" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-code-compare"></i></div>
-              <h6 className="fw-bold mb-1">Compare Quotes</h6>
-              <p className="text-muted small mb-0">Evaluate biddings side-by-side</p>
-            </Link>
-          </>
-        )}
-        {user?.role === "vendor" && (
-          <>
-            <Link to="/rfqs" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-envelope-open-text"></i></div>
-              <h6 className="fw-bold mb-1">View Assigned RFQs</h6>
-              <p className="text-muted small mb-0">Bid on open procurement requests</p>
-            </Link>
-            <Link to="/purchase-orders" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-file-signature"></i></div>
-              <h6 className="fw-bold mb-1">Acknowledge POs</h6>
-              <p className="text-muted small mb-0">Review purchase contracts</p>
-            </Link>
-            <Link to="/invoices" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-receipt"></i></div>
-              <h6 className="fw-bold mb-1">Create Invoice</h6>
-              <p className="text-muted small mb-0">Request payment for delivered orders</p>
-            </Link>
-          </>
-        )}
-        {user?.role === "manager" && (
-          <>
-            <Link to="/approvals" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-stamp"></i></div>
-              <h6 className="fw-bold mb-1">Review Proposals</h6>
-              <p className="text-muted small mb-0">Approve or reject bidding requests</p>
-            </Link>
-            <Link to="/reports" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-chart-line"></i></div>
-              <h6 className="fw-bold mb-1">Procurement Reports</h6>
-              <p className="text-muted small mb-0">View monthly trends & budgets</p>
-            </Link>
-          </>
-        )}
-        {user?.role === "admin" && (
-          <>
-            <Link to="/vendors" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-users-gear"></i></div>
-              <h6 className="fw-bold mb-1">Manage Supplier Records</h6>
-              <p className="text-muted small mb-0">Review supplier credentials & status</p>
-            </Link>
-            <Link to="/activities" className="glass-panel quick-action-card hover-lift">
-              <div className="quick-action-icon"><i className="fa-solid fa-clock-rotate-left"></i></div>
-              <h6 className="fw-bold mb-1">Audit Logs</h6>
-              <p className="text-muted small mb-0">Track all procurement actions</p>
-            </Link>
-          </>
-        )}
+      {/* Operational Action Triggers */}
+      <div className="quick-actions-bar">
+        <h6 className="quick-actions-title">Procurement Execution Triggers</h6>
+        <div className="quick-actions-row">
+          {user?.role === "procurement" && (
+            <>
+              <Link to="/rfqs" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-plus"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Create New RFQ</h6>
+                  <p className="quick-action-subtitle">Dispatch item line specs to suppliers</p>
+                </div>
+              </Link>
+              <Link to="/vendors" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-building-circle-check"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Onboard Supplier</h6>
+                  <p className="quick-action-subtitle">Record GSTIN, MSME, & tax profile</p>
+                </div>
+              </Link>
+              <Link to="/quotations" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-table-columns"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Compare Quotations</h6>
+                  <p className="quick-action-subtitle">L1/L2 vendor rate parity analysis</p>
+                </div>
+              </Link>
+            </>
+          )}
+          {user?.role === "vendor" && (
+            <>
+              <Link to="/rfqs" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-inbox"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Assigned RFQs</h6>
+                  <p className="quick-action-subtitle">Submit competitive line item bids</p>
+                </div>
+              </Link>
+              <Link to="/purchase-orders" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-signature"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Acknowledge POs</h6>
+                  <p className="quick-action-subtitle">Verify delivery timelines & dispatch</p>
+                </div>
+              </Link>
+              <Link to="/invoices" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-file-invoice"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Issue Tax Invoice</h6>
+                  <p className="quick-action-subtitle">Attach GST bill against delivered PO</p>
+                </div>
+              </Link>
+            </>
+          )}
+          {user?.role === "manager" && (
+            <>
+              <Link to="/approvals" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-stamp"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Approval Queue</h6>
+                  <p className="quick-action-subtitle">Authorize or reject procurement bids</p>
+                </div>
+              </Link>
+              <Link to="/reports" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-chart-simple"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Spend Analytics</h6>
+                  <p className="quick-action-subtitle">Monthly vendor expenditure trends</p>
+                </div>
+              </Link>
+            </>
+          )}
+          {user?.role === "admin" && (
+            <>
+              <Link to="/vendors" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-warehouse"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Supplier Master Index</h6>
+                  <p className="quick-action-subtitle">Audit compliance, KYC & blacklist status</p>
+                </div>
+              </Link>
+              <Link to="/activities" className="quick-action-card-industrial">
+                <div className="quick-action-icon-box"><i className="fa-solid fa-list-check"></i></div>
+                <div>
+                  <h6 className="quick-action-title">Audit Trail</h6>
+                  <p className="quick-action-subtitle">System-wide immutable action telemetry</p>
+                </div>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Tables Row: Recent Purchase Orders & Recent Invoices */}
+      {/* Operational Grids: Recent Purchase Orders & Recent Invoices */}
       <div className="dashboard-sections">
-        {/* Recent POs */}
-        <div className="glass-panel section-card">
-          <div className="section-header">
-            <h6 className="section-title">
-              <i className="fa-solid fa-cart-flatbed text-primary"></i> Recent Purchase Orders
+        {/* Recent POs Table */}
+        <div className="section-card-industrial">
+          <div className="section-header-industrial">
+            <h6 className="section-title-industrial">
+              <i className="fa-solid fa-cart-shopping text-muted"></i>
+              Recent Purchase Orders
             </h6>
-            <Link to="/purchase-orders" className="btn btn-sm btn-link p-0 text-decoration-none">
-              View All
+            <Link to="/purchase-orders" className="section-view-link">
+              View All [→]
             </Link>
           </div>
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
+            <table className="table-industrial">
               <thead>
-                <tr className="table-light">
-                  <th className="small py-2 border-0">PO Number</th>
-                  <th className="small py-2 border-0">Vendor / RFQ</th>
-                  <th className="small py-2 border-0">Amount</th>
-                  <th className="small py-2 border-0 text-end">Status</th>
+                <tr>
+                  <th>PO Code</th>
+                  <th>Vendor / Reference</th>
+                  <th>Total Amount</th>
+                  <th className="text-end">Lifecycle Status</th>
                 </tr>
               </thead>
               <tbody>
                 {metrics?.recentPOs?.length > 0 ? (
                   metrics.recentPOs.map((po) => (
                     <tr key={po._id}>
-                      <td className="small py-2 fw-semibold">{po.poNumber}</td>
-                      <td className="small py-2">
-                        <div className="fw-semibold text-truncate" style={{ maxWidth: "150px" }}>
+                      <td className="font-mono text-dark fw-semibold">{po.poNumber}</td>
+                      <td>
+                        <div className="fw-semibold text-truncate" style={{ maxWidth: "160px" }}>
                           {isVendor ? po.rfqId?.title : po.vendorId?.vendorName}
                         </div>
-                        <span className="text-muted text-truncate d-block small" style={{ maxWidth: "150px" }}>
-                          {po.rfqId?.rfqNumber}
+                        <span className="text-mono-xs text-muted d-block text-truncate" style={{ maxWidth: "160px" }}>
+                          {po.rfqId?.rfqNumber || "RFQ-STANDARD"}
                         </span>
                       </td>
-                      <td className="small py-2 fw-semibold">₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="small py-2 text-end">
+                      <td className="font-mono-numbers fw-semibold text-dark">
+                        ₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-end">
                         <span
-                          className={`badge ${
+                          className={`badge-industrial ${
                             po.status === "delivered"
-                              ? "bg-success-subtle text-success"
+                              ? "badge-verified"
                               : po.status === "cancelled"
-                              ? "bg-danger-subtle text-danger"
-                              : "bg-warning-subtle text-warning"
+                              ? "badge-risk"
+                              : "badge-pending"
                           }`}
                         >
                           {po.status}
@@ -251,7 +320,7 @@ const Dashboard = () => {
                 ) : (
                   <tr>
                     <td colSpan="4" className="text-center text-muted small py-4">
-                      No recent Purchase Orders found
+                      No recent purchase orders logged in current billing cycle.
                     </td>
                   </tr>
                 )}
@@ -260,48 +329,51 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Invoices */}
-        <div className="glass-panel section-card">
-          <div className="section-header">
-            <h6 className="section-title">
-              <i className="fa-solid fa-file-invoice-dollar text-purple"></i> Recent Invoices
+        {/* Recent Invoices Table */}
+        <div className="section-card-industrial">
+          <div className="section-header-industrial">
+            <h6 className="section-title-industrial">
+              <i className="fa-solid fa-file-invoice-dollar text-muted"></i>
+              Recent Invoices & Billables
             </h6>
-            <Link to="/invoices" className="btn btn-sm btn-link p-0 text-decoration-none">
-              View All
+            <Link to="/invoices" className="section-view-link">
+              View All [→]
             </Link>
           </div>
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
+            <table className="table-industrial">
               <thead>
-                <tr className="table-light">
-                  <th className="small py-2 border-0">Invoice No</th>
-                  <th className="small py-2 border-0">Supplier / PO</th>
-                  <th className="small py-2 border-0">Amount</th>
-                  <th className="small py-2 border-0 text-end">Status</th>
+                <tr>
+                  <th>Invoice Ref</th>
+                  <th>Supplier / PO Ref</th>
+                  <th>Gross Value</th>
+                  <th className="text-end">Payment Status</th>
                 </tr>
               </thead>
               <tbody>
                 {metrics?.recentInvoices?.length > 0 ? (
                   metrics.recentInvoices.map((inv) => (
                     <tr key={inv._id}>
-                      <td className="small py-2 fw-semibold">{inv.invoiceNumber}</td>
-                      <td className="small py-2">
-                        <div className="fw-semibold text-truncate" style={{ maxWidth: "150px" }}>
-                          {isVendor ? "VendorBridge" : inv.vendorId?.vendorName}
+                      <td className="font-mono text-dark fw-semibold">{inv.invoiceNumber}</td>
+                      <td>
+                        <div className="fw-semibold text-truncate" style={{ maxWidth: "160px" }}>
+                          {isVendor ? "VendorBridge ERP" : inv.vendorId?.vendorName}
                         </div>
-                        <span className="text-muted text-truncate d-block small" style={{ maxWidth: "150px" }}>
-                          Ref: {inv.poId?.poNumber}
+                        <span className="text-mono-xs text-muted d-block text-truncate" style={{ maxWidth: "160px" }}>
+                          PO: {inv.poId?.poNumber || "N/A"}
                         </span>
                       </td>
-                      <td className="small py-2 fw-semibold">₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="small py-2 text-end">
+                      <td className="font-mono-numbers fw-semibold text-dark">
+                        ₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-end">
                         <span
-                          className={`badge ${
+                          className={`badge-industrial ${
                             inv.status === "paid"
-                              ? "bg-success-subtle text-success"
+                              ? "badge-verified"
                               : inv.status === "cancelled"
-                              ? "bg-danger-subtle text-danger"
-                              : "bg-warning-subtle text-warning"
+                              ? "badge-risk"
+                              : "badge-pending"
                           }`}
                         >
                           {inv.status?.replace("_", " ")}
@@ -312,7 +384,7 @@ const Dashboard = () => {
                 ) : (
                   <tr>
                     <td colSpan="4" className="text-center text-muted small py-4">
-                      No recent Invoices found
+                      No pending or processed tax invoices recorded.
                     </td>
                   </tr>
                 )}

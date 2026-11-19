@@ -1,7 +1,17 @@
+/* ==========================================================================
+   PURCHASE ORDERS (PO) — EDITORIAL-INDUSTRIAL ARCHITECTURE
+   ========================================================================== */
+
+.purchase-orders-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .po-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
 }
 
 @media (max-width: 992px) {
@@ -11,15 +21,17 @@
 }
 
 .po-details-card {
-  padding: 30px;
-  border-radius: 16px;
-  background-color: white;
+  padding: 24px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hairline);
 }
 
 .po-item-summary {
-  background-color: rgba(74, 58, 255, 0.02);
-  border: 1px dashed rgba(74, 58, 255, 0.1);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-hairline);
+  padding: 14px;
+  border-radius: var(--radius-xs);
+  margin-bottom: 18px;
 }

@@ -107,8 +107,9 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h2 className="auth-logo">VendorBridge</h2>
-          <p className="auth-subtitle">Procurement & Vendor Management ERP</p>
+          <span className="auth-system-tag">SECURE ACCESS // GATEWAY</span>
+          <h2 className="auth-logo">Vendor Bridge</h2>
+          <p className="auth-subtitle">Operational B2B Procurement & Supplier Management</p>
         </div>
 
         {error && <div className="alert alert-danger py-2 small">{error}</div>}

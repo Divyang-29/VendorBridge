@@ -28,10 +28,10 @@ const Reports = () => {
 
   const getMonthName = (monthNum) => {
     const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
-    return months[monthNum - 1] || "Month";
+    return months[monthNum - 1] || "Mth";
   };
 
   const calculateTotalSpendAccumulated = () => {
@@ -42,37 +42,46 @@ const Reports = () => {
   if (loading) {
     return (
       <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="spinner-border spinner-border-sm text-secondary" role="status">
+          <span className="visually-hidden">Compiling analytics...</span>
         </div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="alert alert-danger">{error}</div>;
+    return (
+      <div className="alert alert-danger py-2 px-3 small border-0 rounded-1" role="alert">
+        <i className="fa-solid fa-triangle-exclamation me-2"></i>
+        {error}
+      </div>
+    );
   }
 
   return (
     <div className="reports-page animate-fade-in">
       {/* Overview spend card */}
-      <div className="glass-panel p-4 mb-4 d-flex justify-content-between align-items-center">
+      <div className="system-status-banner">
         <div>
-          <h5 className="fw-bold mb-1 text-muted">Accumulated Procurement spend</h5>
+          <span className="text-mono-xs text-muted d-block">AGGREGATED FINANCIAL LEDGER</span>
+          <h5 className="fw-bold mb-1 text-dark">Total Cumulative Procurement Spend</h5>
           <h2 className="report-spend-total">
             ₹{calculateTotalSpendAccumulated().toLocaleString("en-IN", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </h2>
+          <span className="text-mono-xs text-muted">
+            RECONCILED AGAINST VALIDATED PURCHASE CONTRACTS
+          </span>
         </div>
         <div className="d-flex gap-2">
           <button
             onClick={() => window.print()}
-            className="btn btn-secondary-custom"
-            title="Print report overview"
+            className="btn-secondary-industrial"
+            title="Export or print statement"
           >
-            <i className="fa-solid fa-print me-2"></i> Print Report
+            <i className="fa-solid fa-print me-1"></i> Print Statement
           </button>
         </div>
       </div>
@@ -80,28 +89,32 @@ const Reports = () => {
       {/* Row 1: Monthly Spend & Spend By Category */}
       <div className="reports-grid">
         {/* Monthly spend trends */}
-        <div className="glass-panel report-table-card">
-          <h6 className="fw-bold mb-3 text-primary">
-            <i className="fa-solid fa-chart-line me-2"></i> Monthly Procurement Trends
-          </h6>
+        <div className="report-table-card">
+          <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h6 className="fw-bold mb-0 text-dark">
+              <i className="fa-solid fa-chart-line text-muted me-2"></i>
+              Monthly Spend Trendlines
+            </h6>
+            <span className="text-mono-xs text-muted">HISTORICAL FISCAL LOG</span>
+          </div>
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
+            <table className="table-industrial">
               <thead>
-                <tr className="table-light">
-                  <th className="small py-2 border-0">Month / Year</th>
-                  <th className="small py-2 border-0 text-center">Orders Count</th>
-                  <th className="small py-2 border-0 text-end">Total Spend (₹)</th>
+                <tr>
+                  <th>Billing Month</th>
+                  <th className="text-center">Issued POs</th>
+                  <th className="text-end">Executed Spend (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {reports?.monthlySpendTrends?.length > 0 ? (
                   reports.monthlySpendTrends.map((trend, idx) => (
                     <tr key={idx}>
-                      <td className="small py-2 fw-semibold">
-                        {getMonthName(trend.month)} {trend.year}
+                      <td className="fw-semibold text-dark font-mono">
+                        {getMonthName(trend.month).toUpperCase()} {trend.year}
                       </td>
-                      <td className="small py-2 text-center">{trend.poCount}</td>
-                      <td className="small py-2 text-end fw-bold text-primary">
+                      <td className="font-mono text-center">{trend.poCount}</td>
+                      <td className="font-mono-numbers text-end fw-bold text-dark">
                         ₹{trend.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
@@ -109,7 +122,7 @@ const Reports = () => {
                 ) : (
                   <tr>
                     <td colSpan="3" className="text-center text-muted small py-4">
-                      No monthly trend logs found
+                      No monthly trend logs found.
                     </td>
                   </tr>
                 )}
@@ -119,26 +132,30 @@ const Reports = () => {
         </div>
 
         {/* Spend by category */}
-        <div className="glass-panel report-table-card">
-          <h6 className="fw-bold mb-3 text-primary">
-            <i className="fa-solid fa-layer-group me-2"></i> Spend by Business Category
-          </h6>
+        <div className="report-table-card">
+          <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h6 className="fw-bold mb-0 text-dark">
+              <i className="fa-solid fa-layer-group text-muted me-2"></i>
+              Spend Breakdown by Commodity Category
+            </h6>
+            <span className="text-mono-xs text-muted">COMMODITY ALLOCATION</span>
+          </div>
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
+            <table className="table-industrial">
               <thead>
-                <tr className="table-light">
-                  <th className="small py-2 border-0">Category</th>
-                  <th className="small py-2 border-0 text-center">Orders</th>
-                  <th className="small py-2 border-0 text-end">Spend (₹)</th>
+                <tr>
+                  <th>Commodity / Category</th>
+                  <th className="text-center">Orders</th>
+                  <th className="text-end">Committed Capital (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {reports?.spendByCategory?.length > 0 ? (
                   reports.spendByCategory.map((cat, idx) => (
                     <tr key={idx}>
-                      <td className="small py-2 fw-semibold">{cat.category}</td>
-                      <td className="small py-2 text-center">{cat.poCount}</td>
-                      <td className="small py-2 text-end fw-bold text-primary">
+                      <td className="fw-semibold text-dark">{cat.category}</td>
+                      <td className="font-mono text-center">{cat.poCount}</td>
+                      <td className="font-mono-numbers text-end fw-bold text-dark">
                         ₹{cat.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
@@ -146,7 +163,7 @@ const Reports = () => {
                 ) : (
                   <tr>
                     <td colSpan="3" className="text-center text-muted small py-4">
-                      No categories spend logs found
+                      No categories spend logs found.
                     </td>
                   </tr>
                 )}
@@ -157,38 +174,57 @@ const Reports = () => {
       </div>
 
       {/* Row 2: Supplier Performance Scorecard */}
-      <div className="glass-panel p-4">
-        <h6 className="fw-bold mb-3 text-primary">
-          <i className="fa-solid fa-users-viewfinder me-2"></i> Supplier Performance Scorecard
-        </h6>
-        <p className="text-muted small mb-4">
-          Vendor rating indices computed as a factor of fulfilled PO deliveries out of total issued PO contracts.
-        </p>
+      <div className="vendor-grid-wrapper">
+        <div className="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <h6 className="fw-bold mb-0 text-dark">
+              <i className="fa-solid fa-award text-muted me-2"></i>
+              Supplier SLA & Delivery Adherence Index
+            </h6>
+            <span className="text-mono-xs text-muted">
+              METRIC COMPUTED AS DELIVERED PURCHASE ORDERS OUT OF TOTAL COMMITTED CONTRACTS
+            </span>
+          </div>
+          <span className="badge-industrial badge-verified">LIVE TELEMETRY</span>
+        </div>
         <div className="table-responsive">
-          <table className="table table-premium align-middle">
+          <table className="table-industrial">
             <thead>
               <tr>
-                <th className="py-3">Supplier Name</th>
-                <th className="py-3">Business Category</th>
-                <th className="py-3 text-center">Total Contracts</th>
-                <th className="py-3 text-center">Delivered Orders</th>
-                <th className="py-3">Delivery Adherence Rate (%)</th>
+                <th>Supplier Entity</th>
+                <th>Supply Category</th>
+                <th className="text-center">Total Contracts</th>
+                <th className="text-center">Delivered Orders</th>
+                <th>SLA Fulfillment Ratio</th>
               </tr>
             </thead>
             <tbody>
               {reports?.vendorPerformance?.length > 0 ? (
                 reports.vendorPerformance.map((perf) => (
                   <tr key={perf._id}>
-                    <td className="py-3 fw-bold">{perf.vendorName}</td>
-                    <td className="py-3">{perf.category}</td>
-                    <td className="py-3 text-center fw-semibold">{perf.totalOrders}</td>
-                    <td className="py-3 text-center text-success fw-semibold">{perf.deliveredOrders}</td>
-                    <td className="py-3" style={{ minWidth: "220px" }}>
-                      <div className="d-flex align-items-center justify-content-between">
-                        <span className="fw-bold text-primary small">{perf.deliveryRate?.toFixed(1)}%</span>
+                    <td className="fw-bold text-dark">{perf.vendorName}</td>
+                    <td>
+                      <span className="badge-industrial badge-hold">{perf.category}</span>
+                    </td>
+                    <td className="font-mono text-center">{perf.totalOrders}</td>
+                    <td className="font-mono text-center text-dark fw-bold">{perf.deliveredOrders}</td>
+                    <td style={{ minWidth: "220px" }}>
+                      <div className="d-flex align-items-center justify-content-between mb-1">
+                        <span className="font-mono text-mono-xs fw-bold text-dark">
+                          {perf.deliveryRate?.toFixed(1)}% ADHERENCE
+                        </span>
+                        <span className={`text-mono-xs ${perf.deliveryRate >= 80 ? "text-success" : perf.deliveryRate >= 50 ? "text-warning" : "text-danger"}`}>
+                          {perf.deliveryRate >= 80 ? "EXEMPLARY" : perf.deliveryRate >= 50 ? "MONITORED" : "SLA RISK"}
+                        </span>
                       </div>
                       <div className="performance-progress-bar">
-                        <div className="progress-fill" style={{ width: `${perf.deliveryRate}%` }}></div>
+                        <div
+                          className="progress-fill"
+                          style={{
+                            width: `${perf.deliveryRate}%`,
+                            backgroundColor: perf.deliveryRate >= 80 ? "var(--status-verified)" : perf.deliveryRate >= 50 ? "var(--status-pending)" : "var(--status-risk)",
+                          }}
+                        ></div>
                       </div>
                     </td>
                   </tr>
@@ -196,7 +232,7 @@ const Reports = () => {
               ) : (
                 <tr>
                   <td colSpan="5" className="text-center text-muted py-4">
-                    No supplier performance metrics logs available in the system
+                    No supplier performance metrics logs available in current ledger.
                   </td>
                 </tr>
               )}

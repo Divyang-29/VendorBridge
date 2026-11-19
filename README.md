@@ -52,7 +52,7 @@ VendorBridge is a premium, full-stack Procurement & Vendor Management ERP design
 Create a `.env` file inside the `Backend/` directory with the following variables:
 
 ```env
-PORT=8080
+PORT=5055
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/dbname
 JWT_SECRET=your_jwt_signing_key
 EMAIL_USER=your_gmail_or_smtp_user@gmail.com
@@ -67,7 +67,7 @@ EMAIL_PASS=your_gmail_app_password_or_smtp_pass
 ```bash
 cd Backend
 npm install
-npm start   # Runs on http://localhost:8080
+npm start   # Runs on http://localhost:5055
 ```
 
 ### 2. Frontend Setup

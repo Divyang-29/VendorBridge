@@ -22,6 +22,84 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
     },
 
+    panNumber: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+
+    gstStateCode: {
+      type: String,
+      trim: true,
+    },
+
+    gstStateName: {
+      type: String,
+      trim: true,
+    },
+
+    gstCertificate: {
+      type: String,
+      trim: true,
+    },
+
+    gstVerificationStatus: {
+      type: String,
+      enum: ["verified", "pending_verification", "rejected"],
+      default: "pending_verification",
+    },
+
+    gstVerifiedAt: {
+      type: Date,
+    },
+
+    gstVerifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    gstVerificationRemarks: {
+      type: String,
+      trim: true,
+    },
+
+    msmeNumber: {
+      type: String,
+      uppercase: true,
+      trim: true,
+    },
+
+    msmeCategory: {
+      type: String,
+      enum: ["Micro", "Small", "Medium", "Not Applicable"],
+      default: "Not Applicable",
+    },
+
+    msmeCertificate: {
+      type: String,
+      trim: true,
+    },
+
+    msmeVerificationStatus: {
+      type: String,
+      enum: ["verified", "pending_verification", "rejected"],
+      default: "pending_verification",
+    },
+
+    msmeVerifiedAt: {
+      type: Date,
+    },
+
+    msmeVerifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    msmeVerificationRemarks: {
+      type: String,
+      trim: true,
+    },
+
     email: {
       type: String,
       required: true,

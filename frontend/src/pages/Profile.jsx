@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { BASE_URL } from "../utils/api";
 import "./Profile.css";
 
 const Profile = () => {
@@ -48,14 +49,14 @@ const Profile = () => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
     const filename = imagePath.split("/").pop().split("\\").pop();
-    return `http://localhost:8080/uploads/${filename}`;
+    const serverOrigin = BASE_URL.replace("/api", "");
+    return `${serverOrigin}/uploads/${filename}`;
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      // Create local object URL for instant preview
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
     }
@@ -72,7 +73,6 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      // Use FormData to support binary file upload for profile image
       const formData = new FormData();
       formData.append("name", name);
       formData.append("firstName", firstName);
@@ -90,8 +90,8 @@ const Profile = () => {
 
       const res = await updateProfile(formData);
       if (res.success) {
-        setSuccessMsg("Your profile details have been updated successfully!");
-        setImageFile(null); // Clear pending file upload
+        setSuccessMsg("Account credentials & location metadata updated successfully.");
+        setImageFile(null);
       } else {
         setError(res.message || "Failed to update profile details.");
       }
@@ -114,14 +114,14 @@ const Profile = () => {
 
   return (
     <div className="profile-page animate-fade-in">
-      <div className="row g-4">
+      <div className="row g-3">
         
         {/* Left Side: Avatar Card */}
         <div className="col-lg-4">
-          <div className="glass-panel text-center p-4 h-100 d-flex flex-column align-items-center justify-content-center">
-            <h5 className="fw-bold mb-4 text-muted">User Account Summary</h5>
+          <div className="profile-avatar-card d-flex flex-column align-items-center justify-content-center">
+            <span className="text-mono-xs text-muted mb-3">SYSTEM CREDENTIALS</span>
             
-            <div className="profile-image-container mb-3" onClick={triggerFileInput}>
+            <div className="profile-image-container" onClick={triggerFileInput} title="Click to upload badge photo">
               {imagePreview ? (
                 <img src={imagePreview} alt="User Avatar" className="profile-image-preview" />
               ) : (
@@ -129,11 +129,10 @@ const Profile = () => {
               )}
               <div className="avatar-edit-overlay">
                 <i className="fa-solid fa-camera"></i>
-                <span>Change Photo</span>
+                <span>Update Photo</span>
               </div>
             </div>
 
-            {/* Hidden Input File */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -142,15 +141,16 @@ const Profile = () => {
               accept="image/*"
             />
 
-            <h4 className="fw-bold mb-1">{name || "N/A"}</h4>
-            <span className="badge bg-primary-subtle text-primary mb-3 px-3 py-2 text-uppercase fs-6">
-              {user?.role}
+            <h5 className="fw-bold mb-1 text-dark">{name || "Authorized User"}</h5>
+            <span className="badge-industrial badge-accent mb-2">
+              [{user?.role?.toUpperCase()}]
             </span>
-            <p className="text-muted small mb-0">{user?.email}</p>
+            <span className="text-mono-xs text-muted font-mono">{user?.email}</span>
             
             {imageFile && (
-              <div className="alert alert-info py-1 px-3 mt-3 mb-0 small">
-                New avatar selected! Click "Save Changes" below to upload.
+              <div className="p-2 mt-3 bg-light border rounded-1 small text-dark">
+                <i className="fa-solid fa-file-image me-1 text-muted"></i>
+                Staged file ready. Click "Save Dossier" below.
               </div>
             )}
           </div>
@@ -158,68 +158,82 @@ const Profile = () => {
 
         {/* Right Side: Edit Form */}
         <div className="col-lg-8">
-          <div className="glass-panel p-4">
-            <h5 className="fw-bold mb-4 text-primary">
-              <i className="fa-solid fa-user-pen me-2"></i> Update Profile Details
-            </h5>
+          <div className="profile-edit-card">
+            <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+              <div>
+                <span className="text-mono-xs text-muted d-block">ORGANIZATIONAL REGISTRY</span>
+                <h6 className="fw-bold mb-0 text-dark">User Identity & Statutory Address</h6>
+              </div>
+              <span className="text-mono-xs text-muted">ID: {user?._id?.substring(18).toUpperCase()}</span>
+            </div>
 
-            {error && <div className="alert alert-danger py-2 small">{error}</div>}
-            {successMsg && <div className="alert alert-success py-2 small">{successMsg}</div>}
+            {error && (
+              <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center mb-3">
+                <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+                <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+              </div>
+            )}
+            {successMsg && (
+              <div className="alert alert-success py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center mb-3">
+                <span><i className="fa-solid fa-circle-check me-2"></i>{successMsg}</span>
+                <button onClick={() => setSuccessMsg("")} className="btn-close" style={{ fontSize: "0.65rem" }}></button>
+              </div>
+            )}
 
             <form onSubmit={handleFormSubmit}>
               
-              {/* Row 1: General Info */}
-              <div className="row g-3 mb-4">
-                <h6 className="fw-bold text-dark border-bottom pb-2">Account Info</h6>
+              {/* Account Info */}
+              <div className="row g-2 mb-3">
+                <span className="text-mono-xs text-muted d-block">PRIMARY USER ATTRIBUTES</span>
                 <div className="col-md-6">
-                  <label className="form-label small text-muted">Full Name</label>
+                  <label className="form-label small">Display Full Name</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label small text-muted">Email Address (Read-only)</label>
+                  <label className="form-label small">Corporate Email (Immutable)</label>
                   <input
                     type="email"
-                    className="form-control bg-light"
+                    className="form-control form-control-sm bg-light text-muted font-mono"
                     value={user?.email || ""}
                     disabled
                   />
                 </div>
               </div>
 
-              {/* Row 2: Personal details */}
-              <div className="row g-3 mb-4">
-                <h6 className="fw-bold text-dark border-bottom pb-2">Personal & Contact Details</h6>
+              {/* Personal details */}
+              <div className="row g-2 mb-3 pt-2 border-top">
+                <span className="text-mono-xs text-muted d-block">CONTACT LIAISON</span>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">First Name</label>
+                  <label className="form-label small">First Name</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="Enter first name"
+                    className="form-control form-control-sm"
+                    placeholder="First name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">Last Name</label>
+                  <label className="form-label small">Last Name</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="Enter last name"
+                    className="form-control form-control-sm"
+                    placeholder="Last name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">Phone Number</label>
+                  <label className="form-label small">Direct Phone</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm font-mono"
                     placeholder="+91 XXXXX XXXXX"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -227,44 +241,44 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Row 3: Address details */}
-              <div className="row g-3 mb-4">
-                <h6 className="fw-bold text-dark border-bottom pb-2">Business / Personal Location Address</h6>
+              {/* Address details */}
+              <div className="row g-2 mb-3 pt-2 border-top">
+                <span className="text-mono-xs text-muted d-block">OFFICIAL BUSINESS ADDRESS</span>
                 <div className="col-12">
-                  <label className="form-label small text-muted">Address Lane</label>
+                  <label className="form-label small">Street Address / Facility Lane</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="Street name, office suite, sector..."
+                    className="form-control form-control-sm"
+                    placeholder="Plot / Sector / Tower details"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">City</label>
+                  <label className="form-label small">City</label>
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="City / District"
+                    className="form-control form-control-sm"
+                    placeholder="City"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">State / Region</label>
+                  <label className="form-label small">State / Province</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     placeholder="State"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label small text-muted">Country</label>
+                  <label className="form-label small">Country</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm"
                     placeholder="India"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
@@ -272,23 +286,22 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Row 4: Bio / Extra Details */}
-              <div className="mb-4">
-                <h6 className="fw-bold text-dark border-bottom pb-2">Additional Information</h6>
-                <label className="form-label small text-muted">Organization / Vendor Biography</label>
+              {/* Bio / Extra Details */}
+              <div className="mb-3 pt-2 border-top">
+                <span className="text-mono-xs text-muted d-block mb-1">COMPLIANCE & PROFILE BIOGRAPHY</span>
                 <textarea
-                  className="form-control"
+                  className="form-control form-control-sm"
                   rows="3"
-                  placeholder="Provide any additional vendor profile details, certifications, registrations, or summary descriptions..."
+                  placeholder="Operational scope, factory accreditations, or authorized procurement roles..."
                   value={additionalInformation}
                   onChange={(e) => setAdditionalInformation(e.target.value)}
                 ></textarea>
               </div>
 
-              <div className="d-flex justify-content-end mt-4">
+              <div className="d-flex justify-content-end pt-2 border-top">
                 <button
                   type="submit"
-                  className="btn btn-primary-custom px-5 py-2"
+                  className="btn-primary-industrial px-4"
                   disabled={loading}
                 >
                   {loading ? (
@@ -297,7 +310,7 @@ const Profile = () => {
                       Saving...
                     </>
                   ) : (
-                    "Save Changes"
+                    "Save Dossier Details"
                   )}
                 </button>
               </div>

@@ -26,34 +26,21 @@ const Layout = ({ children }) => {
 
   const fetchNotifications = async () => {
     try {
-      if (user?.role !== "vendor") {
-        const res = await api.get("/activities?limit=5");
-        if (res.success && res.logs) {
-          setNotifications(
-            res.logs.map((log) => ({
-              id: log._id,
-              text: log.details || "System Activity recorded",
-              timestamp: log.createdAt,
-            }))
-          );
-        }
+      const res = await api.get("/activities?limit=5");
+      if (res.success && res.logs && res.logs.length > 0) {
+        setNotifications(
+          res.logs.map((log) => ({
+            id: log._id,
+            text: log.description || log.action || "System Activity recorded",
+            timestamp: log.createdAt,
+          }))
+        );
       } else {
-        // Vendor tailored alerts
         setNotifications([
           {
-            id: "v1",
-            text: "Your quotation has been successfully reviewed by manager.",
+            id: "system-ready",
+            text: "Enterprise procurement telemetry active and operational.",
             timestamp: new Date(),
-          },
-          {
-            id: "v2",
-            text: "RFQ 'Bulk Shoes' assigned to your vendor account.",
-            timestamp: new Date(Date.now() - 3600000),
-          },
-          {
-            id: "v3",
-            text: "Welcome to the VendorBridge Partner Network!",
-            timestamp: new Date(Date.now() - 86400000),
           },
         ]);
       }
@@ -139,9 +126,9 @@ const Layout = ({ children }) => {
             </div>
             
             <div className="navbar-user-display">
-              <i className="fa-regular fa-user-circle fs-4 text-muted"></i>
-              <span>{user?.name || "User Account"}</span>
-              <span className="badge bg-light text-dark border ms-1">{user?.role}</span>
+              <i className="fa-regular fa-id-badge text-muted"></i>
+              <span className="navbar-user-name">{user?.name || "User Account"}</span>
+              <span className="badge-industrial badge-hold ms-1">{user?.role}</span>
             </div>
           </div>
         </header>

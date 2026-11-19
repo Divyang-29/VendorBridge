@@ -6,11 +6,11 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 
 const router = express.Router();
 
-// Get Activity logs (Admin, Procurement, Manager only)
+// Get Activity logs (Accessible to all authenticated enterprise roles, scoped per role)
 router.get(
   "/",
   authMiddleware,
-  roleMiddleware("admin", "procurement", "manager"),
+  roleMiddleware("admin", "procurement", "manager", "vendor"),
   getActivityLogs
 );
 

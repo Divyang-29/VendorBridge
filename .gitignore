@@ -17,6 +17,11 @@ frontend/.env
 Backend/uploads/*
 !Backend/uploads/.gitkeep
 
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Production builds
 frontend/dist/
 frontend/dist-ssr/

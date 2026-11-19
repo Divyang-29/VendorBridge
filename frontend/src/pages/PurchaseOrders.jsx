@@ -46,7 +46,7 @@ const PurchaseOrders = () => {
     try {
       const res = await api.patch(`/purchase-orders/${id}/status`, { status });
       if (res.success) {
-        setSuccessMsg(`Purchase Order ${status === "acknowledged" ? "acknowledged" : "updated to " + status}`);
+        setSuccessMsg(`Purchase Order ${status === "acknowledged" ? "acknowledged" : "updated to [" + status.toUpperCase() + "]"}`);
         fetchPODetails(id);
         fetchPOs();
       }
@@ -61,8 +61,7 @@ const PurchaseOrders = () => {
     try {
       const res = await api.post("/invoices", { poId: id });
       if (res.success) {
-        setSuccessMsg(`Invoice ${res.invoice.invoiceNumber} generated successfully!`);
-        // Navigate or reload
+        setSuccessMsg(`Invoice ${res.invoice.invoiceNumber} generated successfully and logged in billing center!`);
         fetchPODetails(id);
       }
     } catch (err) {
@@ -75,130 +74,167 @@ const PurchaseOrders = () => {
 
   return (
     <div className="purchase-orders-page">
-      {error && <div className="alert alert-danger py-2 small">{error}</div>}
-      {successMsg && <div className="alert alert-success py-2 small">{successMsg}</div>}
+      {/* Alerts */}
+      {error && (
+        <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+          <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+      {successMsg && (
+        <div className="alert alert-success py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-check me-2"></i>{successMsg}</span>
+          <button onClick={() => setSuccessMsg("")} className="btn-close" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+
+      {/* Header Bar */}
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div>
+          <h4 className="fw-bold mb-0 text-dark">Purchase Orders (PO) Contract Hub</h4>
+          <span className="text-mono-xs text-muted">
+            LEGALLY BINDING PROCUREMENT CONTRACTS // GST TAX-COMPLIANT
+          </span>
+        </div>
+        <span className="badge-industrial badge-hold">
+          {purchaseOrders.length} PURCHASE CONTRACTS
+        </span>
+      </div>
 
       <div className="po-layout">
         {/* Left Side: POs Directory */}
-        <div className="mb-4">
-          <div className="glass-panel p-4">
-            <h5 className="fw-bold mb-4">Purchase Orders (PO) directory</h5>
-            {loading && purchaseOrders.length === 0 ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : purchaseOrders.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-premium align-middle">
-                  <thead>
-                    <tr>
-                      <th>PO Number</th>
-                      <th>{!isVendor ? "Supplier" : "RFQ Ref"}</th>
-                      <th>Total Amount</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchaseOrders.map((po) => (
-                      <tr
-                        key={po._id}
-                        onClick={() => fetchPODetails(po._id)}
-                        className={`cursor-pointer ${selectedPO?._id === po._id ? "table-active" : ""}`}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <td className="py-3 fw-bold text-primary">{po.poNumber}</td>
-                        <td className="py-3">
-                          <div className="fw-semibold">
-                            {isVendor ? po.rfqId?.rfqNumber : po.vendorId?.vendorName}
-                          </div>
-                        </td>
-                        <td className="py-3 fw-semibold">₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="py-3">
-                          <span
-                            className={`badge ${
-                              po.status === "delivered"
-                                ? "bg-success-subtle text-success"
-                                : po.status === "cancelled"
-                                ? "bg-danger-subtle text-danger"
-                                : "bg-warning-subtle text-warning"
-                            }`}
-                          >
-                            {po.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center text-muted py-5">
-                <i className="fa-regular fa-folder-open fs-2 mb-3 d-block text-muted"></i>
-                No Purchase Orders found.
-              </div>
-            )}
+        <div className="vendor-grid-wrapper">
+          <div className="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <h6 className="fw-bold mb-0 text-dark">Contracts Master Register</h6>
+            <span className="text-mono-xs text-muted">SELECT TO AUDIT</span>
           </div>
+          {loading && purchaseOrders.length === 0 ? (
+            <div className="text-center py-5">
+              <div className="spinner-border spinner-border-sm text-secondary" role="status">
+                <span className="visually-hidden">Loading contracts...</span>
+              </div>
+            </div>
+          ) : purchaseOrders.length > 0 ? (
+            <div className="table-responsive">
+              <table className="table-industrial">
+                <thead>
+                  <tr>
+                    <th>PO Identifier</th>
+                    <th>{!isVendor ? "Supplier Name" : "RFQ Scope"}</th>
+                    <th>Total Value</th>
+                    <th className="text-end">Lifecycle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseOrders.map((po) => (
+                    <tr
+                      key={po._id}
+                      onClick={() => fetchPODetails(po._id)}
+                      className={`cursor-pointer ${selectedPO?._id === po._id ? "bg-light" : ""}`}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td className="font-mono text-dark fw-bold">{po.poNumber}</td>
+                      <td>
+                        <div className="fw-semibold text-dark small text-truncate" style={{ maxWidth: "150px" }}>
+                          {isVendor ? po.rfqId?.title : po.vendorId?.vendorName}
+                        </div>
+                        <span className="text-mono-xs text-muted d-block text-truncate" style={{ maxWidth: "150px" }}>
+                          {po.rfqId?.rfqNumber || "RFQ-CONTRACT"}
+                        </span>
+                      </td>
+                      <td className="font-mono-numbers fw-semibold text-dark">
+                        ₹{po.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-end">
+                        <span
+                          className={`badge-industrial ${
+                            po.status === "delivered"
+                              ? "badge-verified"
+                              : po.status === "cancelled"
+                              ? "badge-risk"
+                              : "badge-pending"
+                          }`}
+                        >
+                          {po.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center text-muted py-5">
+              <i className="fa-solid fa-cart-shopping fs-3 mb-2 d-block text-muted"></i>
+              No Purchase Orders recorded in current ledger.
+            </div>
+          )}
         </div>
 
         {/* Right Side: PO details */}
-        <div className="mb-4">
+        <div>
           {selectedPO ? (
-            <div className="glass-panel po-details-card animate-fade-in">
-              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4">
+            <div className="po-details-card animate-fade-in">
+              <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
                 <div>
-                  <span className="text-muted small">PO Reference:</span>
-                  <h4 className="fw-bold text-dark mb-0">{selectedPO.poNumber}</h4>
+                  <span className="text-mono-xs text-muted d-block">PURCHASE ORDER SPEC SHEET</span>
+                  <h5 className="fw-bold text-dark font-mono mb-0">{selectedPO.poNumber}</h5>
                 </div>
                 <span
-                  className={`badge fs-6 py-2 px-3 ${
+                  className={`badge-industrial ${
                     selectedPO.status === "delivered"
-                      ? "bg-success text-white"
+                      ? "badge-verified"
                       : selectedPO.status === "cancelled"
-                      ? "bg-danger text-white"
-                      : "bg-warning text-dark"
+                      ? "badge-risk"
+                      : "badge-pending"
                   }`}
                 >
                   {selectedPO.status.toUpperCase()}
                 </span>
               </div>
 
-              {/* Company Info row */}
-              <div className="row mb-4">
-                <div className="col-md-6 mb-2">
-                  <span className="text-muted small d-block">Supplier/Vendor:</span>
-                  <strong className="text-dark">{selectedPO.vendorId?.vendorName}</strong>
-                  <span className="text-muted d-block small">{selectedPO.vendorId?.email}</span>
-                  <span className="text-muted d-block small">GSTIN: {selectedPO.vendorId?.gstNumber}</span>
+              {/* Vendor & Issuer Meta */}
+              <div className="row g-2 mb-3 p-3 bg-light border rounded-1">
+                <div className="col-md-6">
+                  <span className="text-mono-xs text-muted d-block">COMMISSIONED SUPPLIER</span>
+                  <strong className="text-dark small d-block">{selectedPO.vendorId?.vendorName}</strong>
+                  <span className="text-mono-xs text-muted d-block">{selectedPO.vendorId?.email}</span>
+                  <span className="text-mono-xs text-dark font-mono">GSTIN: {selectedPO.vendorId?.gstNumber}</span>
                 </div>
-                <div className="col-md-6 mb-2 text-md-end">
-                  <span className="text-muted small d-block">Created By:</span>
-                  <strong className="text-dark">{selectedPO.createdBy?.name}</strong>
-                  <span className="text-muted d-block small">Date Issued: {new Date(selectedPO.createdAt).toLocaleDateString()}</span>
+                <div className="col-md-6 text-md-end">
+                  <span className="text-mono-xs text-muted d-block">ISSUING AUTHORITY</span>
+                  <strong className="text-dark small d-block">{selectedPO.createdBy?.name || "Procurement Officer"}</strong>
+                  <span className="text-mono-xs text-muted d-block">
+                    DATE: {new Date(selectedPO.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className="text-mono-xs text-dark font-mono">TERMS: NET 30 DAYS</span>
                 </div>
               </div>
 
-              {/* Items summary */}
+              {/* Items Summary BOQ */}
               <div className="po-item-summary">
-                <h6 className="fw-bold text-primary mb-3">Order Items Spec</h6>
+                <span className="text-mono-xs text-muted d-block mb-2">COMMERCIAL LINE SPECIFICATIONS</span>
                 <div className="table-responsive">
-                  <table className="table table-sm align-middle">
+                  <table className="table table-sm align-middle mb-0">
                     <thead>
-                      <tr>
-                        <th>Item</th>
-                        <th className="text-center">Qty</th>
-                        <th className="text-end">Price</th>
-                        <th className="text-end">Subtotal</th>
+                      <tr className="text-mono-xs text-muted">
+                        <th>Line Item</th>
+                        <th className="text-center">Units</th>
+                        <th className="text-end">Unit Rate</th>
+                        <th className="text-end">Line Total</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedPO.items?.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="small">{item.itemName}</td>
-                          <td className="small text-center">{item.quantity}</td>
-                          <td className="small text-end">₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                          <td className="small text-end fw-semibold">₹{item.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <tr key={idx} className="small">
+                          <td className="text-dark fw-semibold">{item.itemName}</td>
+                          <td className="font-mono text-center">{item.quantity}</td>
+                          <td className="font-mono-numbers text-end">₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                          <td className="font-mono-numbers text-end fw-bold">₹{item.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -206,19 +242,25 @@ const PurchaseOrders = () => {
                 </div>
               </div>
 
-              {/* Financial summary */}
-              <div className="d-flex flex-column align-items-end mb-4 border-bottom pb-3">
-                <div className="d-flex justify-content-between w-50 mb-1">
-                  <span className="text-muted small">Subtotal:</span>
-                  <span className="fw-semibold small">₹{(selectedPO.totalAmount - selectedPO.taxAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              {/* Financial Calculation */}
+              <div className="d-flex flex-column align-items-end mb-3 border-bottom pb-3">
+                <div className="d-flex justify-content-between w-75 mb-1 small">
+                  <span className="text-muted">Taxable Subtotal:</span>
+                  <span className="font-mono-numbers text-dark">
+                    ₹{(selectedPO.totalAmount - selectedPO.taxAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <div className="d-flex justify-content-between w-50 mb-2">
-                  <span className="text-muted small">GST Tax (18%):</span>
-                  <span className="fw-semibold small">₹{selectedPO.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className="d-flex justify-content-between w-75 mb-2 small">
+                  <span className="text-muted">Applicable GST (18% IGST/CGST+SGST):</span>
+                  <span className="font-mono-numbers text-dark">
+                    ₹{selectedPO.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <div className="d-flex justify-content-between w-50 pt-2 border-top">
-                  <strong className="text-dark">Total Amount:</strong>
-                  <strong className="text-primary fs-5">₹{selectedPO.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                <div className="d-flex justify-content-between w-75 pt-2 border-top">
+                  <strong className="text-dark">Net PO Value:</strong>
+                  <strong className="font-mono-numbers text-dark fs-5">
+                    ₹{selectedPO.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </strong>
                 </div>
               </div>
 
@@ -227,43 +269,43 @@ const PurchaseOrders = () => {
                 {isVendor && selectedPO.status === "issued" && (
                   <button
                     onClick={() => handleStatusUpdate(selectedPO._id, "acknowledged")}
-                    className="btn btn-primary-custom"
+                    className="btn-primary-industrial"
                   >
-                    <i className="fa-solid fa-clipboard-check me-2"></i> Acknowledge Purchase Order
+                    <i className="fa-solid fa-clipboard-check me-1"></i> Acknowledge Contract
                   </button>
                 )}
                 {isVendor && selectedPO.status === "acknowledged" && (
-                  <>
-                    <button
-                      onClick={() => handleStatusUpdate(selectedPO._id, "delivered")}
-                      className="btn btn-primary-custom"
-                    >
-                      <i className="fa-solid fa-truck-ramp-box me-2"></i> Mark as Delivered
-                    </button>
-                  </>
+                  <button
+                    onClick={() => handleStatusUpdate(selectedPO._id, "delivered")}
+                    className="btn-primary-industrial"
+                  >
+                    <i className="fa-solid fa-truck-ramp-box me-1"></i> Mark as Delivered
+                  </button>
                 )}
                 {isVendor && selectedPO.status === "delivered" && (
                   <button
                     onClick={() => handleGenerateInvoice(selectedPO._id)}
-                    className="btn btn-success rounded-pill px-4"
+                    className="btn-primary-industrial"
+                    style={{ backgroundColor: "var(--status-verified)", borderColor: "var(--status-verified)" }}
                   >
-                    <i className="fa-solid fa-receipt me-2"></i> Generate Digital Invoice
+                    <i className="fa-solid fa-receipt me-1"></i> Issue Tax Invoice
                   </button>
                 )}
                 {isProcurement && selectedPO.status !== "cancelled" && selectedPO.status !== "delivered" && (
                   <button
                     onClick={() => handleStatusUpdate(selectedPO._id, "cancelled")}
-                    className="btn btn-danger-custom btn-secondary-custom text-danger border-danger border-opacity-25"
+                    className="btn-secondary-industrial text-danger"
                   >
-                    <i className="fa-solid fa-trash me-2"></i> Cancel PO
+                    <i className="fa-solid fa-ban me-1"></i> Cancel PO
                   </button>
                 )}
               </div>
             </div>
           ) : (
-            <div className="glass-panel p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
-              <i className="fa-solid fa-cart-shopping fs-3 text-primary mb-3"></i>
-              <h5>Select a Purchase Order from the directory list to view specifications and perform status updates.</h5>
+            <div className="industrial-card p-5 text-center text-muted h-100 d-flex flex-column align-items-center justify-content-center">
+              <i className="fa-solid fa-cart-shopping fs-3 text-muted mb-2"></i>
+              <h6 className="fw-semibold text-dark">Select a Purchase Order</h6>
+              <span className="text-mono-xs text-muted">AUDIT SPEC SHEET, LINE ITEM COSTS, AND TAX INVOICE STATUS</span>
             </div>
           )}
         </div>

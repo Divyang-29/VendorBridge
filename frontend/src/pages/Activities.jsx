@@ -43,84 +43,99 @@ const Activities = () => {
     fetchLogs(newPage);
   };
 
-  // Helper to color-code action tag types
   const getActionBadgeClass = (action) => {
-    if (action.startsWith("CREATE_")) return "bg-primary-subtle text-primary";
-    if (action.startsWith("SUBMIT_")) return "bg-info-subtle text-info";
-    if (action.startsWith("APPROVE_")) return "bg-success-subtle text-success";
-    if (action.startsWith("REJECT_")) return "bg-danger-subtle text-danger";
-    if (action.startsWith("GENERATE_")) return "bg-purple-subtle text-purple";
-    return "bg-secondary-subtle text-secondary";
+    if (action.startsWith("CREATE_")) return "badge-accent";
+    if (action.startsWith("SUBMIT_")) return "badge-hold";
+    if (action.startsWith("APPROVE_")) return "badge-verified";
+    if (action.startsWith("REJECT_")) return "badge-risk";
+    if (action.startsWith("GENERATE_")) return "badge-verified";
+    return "badge-hold";
   };
 
   return (
     <div className="activities-page">
-      {error && <div className="alert alert-danger py-2 small">{error}</div>}
+      {error && (
+        <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+          <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
 
       {/* Filter panel */}
-      <div className="glass-panel p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <h5 className="fw-bold mb-0 text-dark">Audit Logs & History</h5>
+      <div className="quotations-filter-card d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h5 className="fw-bold mb-0 text-dark">Immutable Procurement Audit Ledger</h5>
+          <span className="text-mono-xs text-muted">COMPLIANCE TELEMETRY // SYSTEM ACTIONS LOGGED</span>
+        </div>
         <div className="d-flex align-items-center gap-2">
-          <label className="form-label small mb-0 text-muted text-nowrap">Filter by module:</label>
+          <label className="text-mono-xs text-muted text-nowrap mb-0">MODULE SCOPE:</label>
           <select
-            className="form-select form-select-sm"
+            className="form-select form-select-sm font-mono-xs"
             value={entityType}
             onChange={(e) => setEntityType(e.target.value)}
           >
-            <option value="">All Modules</option>
-            <option value="RFQ">RFQ</option>
-            <option value="Quotation">Quotation</option>
-            <option value="Approval">Approval</option>
-            <option value="PurchaseOrder">PurchaseOrder</option>
-            <option value="Invoice">Invoice</option>
-            <option value="Vendor">Vendor</option>
-            <option value="User">User</option>
+            <option value="">MODULE: ALL</option>
+            <option value="RFQ">RFQ Tenders</option>
+            <option value="Quotation">Vendor Quotations</option>
+            <option value="Approval">Manager Approvals</option>
+            <option value="PurchaseOrder">Purchase Contracts</option>
+            <option value="Invoice">Tax Invoices</option>
+            <option value="Vendor">Supplier Directory</option>
+            <option value="User">User Accounts</option>
           </select>
         </div>
       </div>
 
       {/* Audit table */}
-      <div className="glass-panel p-4">
+      <div className="vendor-grid-wrapper">
+        <div className="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+          <h6 className="fw-bold mb-0 text-dark">Chronological Event Trail</h6>
+          <span className="text-mono-xs text-muted">PAGE {currentPage} OF {totalPages}</span>
+        </div>
         {loading ? (
           <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <div className="spinner-border spinner-border-sm text-secondary" role="status">
+              <span className="visually-hidden">Loading telemetry...</span>
             </div>
           </div>
         ) : logs.length > 0 ? (
           <>
             <div className="table-responsive">
-              <table className="table table-premium align-middle">
+              <table className="table-industrial">
                 <thead>
                   <tr>
-                    <th>Timestamp</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Reference</th>
-                    <th>Activity Detail</th>
+                    <th>Timestamp (IST)</th>
+                    <th>User Identity</th>
+                    <th>Action Code</th>
+                    <th>Target Entity</th>
+                    <th>Audit Details</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map((log) => (
                     <tr key={log._id}>
-                      <td className="py-3 log-timestamp">
-                        {new Date(log.createdAt).toLocaleString()}
+                      <td className="log-timestamp">
+                        {new Date(log.createdAt).toLocaleString("en-IN")}
                       </td>
-                      <td className="py-3">
-                        <div className="fw-bold small">{log.userId?.name}</div>
-                        <span className="badge bg-light text-dark border small" style={{ fontSize: "0.65rem" }}>
-                          {log.userId?.role}
+                      <td>
+                        <div className="fw-bold text-dark small">{log.userId?.name || "System Automated"}</div>
+                        <span className="text-mono-xs text-muted">
+                          [{log.userId?.role?.toUpperCase() || "CORE"}]
                         </span>
                       </td>
-                      <td className="py-3">
-                        <span className={`badge log-action-badge py-2 px-3 ${getActionBadgeClass(log.action)}`}>
+                      <td>
+                        <span className={`badge-industrial ${getActionBadgeClass(log.action)}`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="py-3 fw-semibold small text-muted">
-                        {log.entityType}: {log.entityId?.substring(18).toUpperCase()}
+                      <td>
+                        <span className="font-mono text-muted small">
+                          {log.entityType} // {log.entityId?.substring(18).toUpperCase()}
+                        </span>
                       </td>
-                      <td className="py-3 log-description">{log.description}</td>
+                      <td className="log-description">
+                        {log.details || "System execution completed."}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -128,34 +143,34 @@ const Activities = () => {
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-between align-items-center mt-4 border-top pt-3">
-                <span className="text-muted small">
-                  Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({logs.length} on page)
-                </span>
-                <div className="d-flex gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="btn btn-sm btn-secondary-custom py-1"
-                  >
-                    <i className="fa-solid fa-angle-left me-1"></i> Prev
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="btn btn-sm btn-secondary-custom py-1"
-                  >
-                    Next <i className="fa-solid fa-angle-right ms-1"></i>
-                  </button>
-                </div>
+            <div className="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+              <span className="text-mono-xs text-muted">
+                SHOWING 15 RECORDS PER BLOCK // TOTAL PAGES: {totalPages}
+              </span>
+              <div className="d-flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="btn-secondary-industrial"
+                  style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                >
+                  [←] Prev
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="btn-secondary-industrial"
+                  style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                >
+                  Next [→]
+                </button>
               </div>
-            )}
+            </div>
           </>
         ) : (
           <div className="text-center text-muted py-5">
-            <i className="fa-regular fa-folder-open fs-2 mb-3 d-block text-muted"></i>
-            No audit logs captured.
+            <i className="fa-solid fa-list-check fs-3 mb-2 d-block text-muted"></i>
+            No audit records found matching specified filters.
           </div>
         )}
       </div>

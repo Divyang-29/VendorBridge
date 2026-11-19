@@ -109,10 +109,9 @@ const Quotations = () => {
       });
 
       if (res.success) {
-        setSuccessMsg("Proposal routed to manager for approval successfully!");
+        setSuccessMsg("Proposal routed to designated manager for approval signature.");
         setSubmitApprovalModal(false);
         setApprovalRemarks("");
-        // Reload comparison
         fetchComparison(selectedRfqId);
       }
     } catch (err) {
@@ -126,7 +125,7 @@ const Quotations = () => {
     try {
       const res = await api.post("/purchase-orders", { quotationId });
       if (res.success) {
-        setSuccessMsg(`Purchase Order ${res.po?.poNumber || ""} generated successfully!`);
+        setSuccessMsg(`Purchase Order ${res.po?.poNumber || ""} generated and committed to ledger.`);
         fetchComparison(selectedRfqId);
       }
     } catch (err) {
@@ -143,24 +142,38 @@ const Quotations = () => {
 
   return (
     <div className="quotations-page">
-      {error && <div className="alert alert-danger py-2 small">{error}</div>}
-      {successMsg && <div className="alert alert-success py-2 small">{successMsg}</div>}
+      {/* Alerts */}
+      {error && (
+        <div className="alert alert-danger py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-exclamation me-2"></i>{error}</span>
+          <button onClick={() => setError("")} className="btn-close btn-close-white" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
+      {successMsg && (
+        <div className="alert alert-success py-2 px-3 small border-0 rounded-1 d-flex justify-content-between align-items-center">
+          <span><i className="fa-solid fa-circle-check me-2"></i>{successMsg}</span>
+          <button onClick={() => setSuccessMsg("")} className="btn-close" style={{ fontSize: "0.65rem" }}></button>
+        </div>
+      )}
 
-      {/* Toggle View Mode */}
-      <div className="glass-panel p-4 mb-4">
-        <h5 className="fw-bold mb-3 text-primary">Bidding & Quotations Analysis</h5>
+      {/* Selector Card */}
+      <div className="quotations-filter-card">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h5 className="fw-bold mb-0 text-dark">Supplier Quotation & Bidding Analysis</h5>
+          <span className="text-mono-xs text-muted">PARITY PROTOCOL: L1 RATE // SLA TIME</span>
+        </div>
         <div className="row align-items-center">
           <div className="col-md-8">
-            <label className="form-label small text-muted">Select RFQ to compare vendor quotations:</label>
+            <label className="form-label small">Select Tender RFQ to analyze commercial bids:</label>
             <select
-              className="form-select"
+              className="form-select font-mono-xs"
               value={selectedRfqId}
               onChange={(e) => setSelectedRfqId(e.target.value)}
             >
-              <option value="">-- View General Bids Directory --</option>
+              <option value="">-- [OVERVIEW] Display All Historical Quotations --</option>
               {rfqs.map((rfq) => (
                 <option key={rfq._id} value={rfq._id}>
-                  {rfq.rfqNumber} — {rfq.title} ({rfq.status})
+                  {rfq.rfqNumber} // {rfq.title} [{rfq.status?.toUpperCase()}]
                 </option>
               ))}
             </select>
@@ -171,68 +184,81 @@ const Quotations = () => {
       {/* Compare Mode */}
       {selectedRfqId && comparison && (
         <div className="animate-fade-in">
-          <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
-            <i className="fa-solid fa-code-compare text-primary"></i>
-            Compare Matrix for RFQ
-          </h5>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+              <i className="fa-solid fa-table-columns text-muted"></i>
+              Bid Parity Matrix // RFQ: {comparison.rfq?.rfqNumber || selectedRfqId}
+            </h6>
+            <span className="text-mono-xs text-muted">TOTAL BIDS: {comparison.quotations?.length || 0}</span>
+          </div>
 
           {comparison.quotations?.length > 0 ? (
-            <div className="row g-4 mb-5">
+            <div className="row g-3 mb-4">
               {comparison.quotations.map((q) => (
                 <div key={q._id} className="col-lg-4 col-md-6">
                   <div
-                    className={`glass-panel compare-column h-100 ${
+                    className={`compare-column-industrial h-100 ${
                       q.isLowestPrice ? "highlight-lowest" : q.isFastestDelivery ? "highlight-fastest" : ""
                     }`}
                   >
-                    {/* Badge */}
-                    {q.isLowestPrice && (
-                      <span className="compare-highlight-label bg-lowest">
-                        <i className="fa-solid fa-arrow-down me-1"></i> Lowest Price
+                    {/* Parity Badge */}
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      {q.isLowestPrice ? (
+                        <span className="compare-highlight-label bg-lowest">
+                          <i className="fa-solid fa-arrow-down-short-wide me-1"></i> L1 Lowest Bid
+                        </span>
+                      ) : q.isFastestDelivery ? (
+                        <span className="compare-highlight-label bg-fastest">
+                          <i className="fa-solid fa-truck-fast me-1"></i> Fastest SLA
+                        </span>
+                      ) : (
+                        <span className="badge-industrial badge-hold mb-2">
+                          L2 Bidder
+                        </span>
+                      )}
+                      <span className="text-mono-xs text-muted">
+                        BID-{q._id.substring(18).toUpperCase()}
                       </span>
-                    )}
-                    {q.isFastestDelivery && !q.isLowestPrice && (
-                      <span className="compare-highlight-label bg-fastest">
-                        <i className="fa-solid fa-bolt me-1"></i> Fastest Delivery
-                      </span>
-                    )}
+                    </div>
 
                     <h5 className="fw-bold text-dark mb-1">{q.vendor?.vendorName}</h5>
-                    <span className="badge bg-light text-dark border mb-3">{q.vendor?.category}</span>
+                    <span className="badge-industrial badge-hold mb-3">{q.vendor?.category}</span>
 
-                    <div className="border-top border-bottom py-3 my-3">
-                      <div className="d-flex justify-content-between mb-2">
-                        <span className="text-muted small">Total Bid:</span>
-                        <strong className="text-primary fs-5">₹{q.totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                    <div className="p-3 my-3 bg-light border rounded-1">
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <span className="text-mono-xs text-muted">GROSS BID VALUE:</span>
+                        <span className="font-mono-numbers fw-bold text-dark fs-5">
+                          ₹{q.totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
                       </div>
-                      <div className="d-flex justify-content-between">
-                        <span className="text-muted small">Timeline:</span>
-                        <strong className="small">{q.deliveryTimeline}</strong>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="text-mono-xs text-muted">LEAD TIME:</span>
+                        <span className="font-mono text-dark fw-semibold small">{q.deliveryTimeline}</span>
                       </div>
                     </div>
 
-                    <h6 className="fw-bold text-dark mb-2">Quoted Items:</h6>
-                    <ul className="list-unstyled mb-4">
+                    <span className="text-mono-xs text-muted d-block mb-1">LINE ITEM BREAKDOWN</span>
+                    <div className="mb-3">
                       {q.items?.map((item, idx) => (
-                        <li key={idx} className="small mb-2 d-flex justify-content-between">
+                        <div key={idx} className="bid-item-row">
                           <span className="text-truncate" style={{ maxWidth: "160px" }}>{item.itemName}</span>
-                          <span>
-                            {item.quantity} x ₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="font-mono text-muted">
+                            {item.quantity} x ₹{item.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </span>
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
 
                     {q.notes && (
-                      <div className="mb-4">
-                        <span className="text-muted small d-block">Supplier Terms:</span>
-                        <p className="small mb-0 text-muted italic">"{q.notes}"</p>
+                      <div className="p-2 mb-3 bg-white border rounded-1">
+                        <span className="text-mono-xs text-muted d-block">SUPPLIER COMMERCIAL REMARKS:</span>
+                        <span className="small text-secondary fst-italic">"{q.notes}"</span>
                       </div>
                     )}
 
                     {q.attachments?.length > 0 && (
-                      <div className="mb-4">
-                        <span className="text-muted small d-block mb-1">Catalog Attachments:</span>
+                      <div className="mb-3">
+                        <span className="text-mono-xs text-muted d-block mb-1">SUBMITTED CATALOG:</span>
                         {q.attachments.map((file, idx) => {
                           const filename = getFilename(file);
                           const fileUrl = file.replace(/.*Backend\/uploads\//, `${BASE_URL.replace("/api", "")}/uploads/`);
@@ -242,9 +268,10 @@ const Quotations = () => {
                               href={fileUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="d-block small text-truncate text-decoration-none text-primary mb-1"
+                              className="attachment-pill-industrial d-flex mb-1"
                             >
-                              <i className="fa-solid fa-paperclip me-1"></i> {filename}
+                              <i className="fa-solid fa-file-pdf text-danger"></i>
+                              <span className="text-truncate">{filename}</span>
                             </a>
                           );
                         })}
@@ -254,27 +281,25 @@ const Quotations = () => {
                     {isProcurement && q.status === "submitted" && (
                       <button
                         onClick={() => handleOpenApprovalModal(q._id)}
-                        className="btn btn-primary-custom btn-sm w-100"
+                        className="btn-primary-industrial w-100 mt-2"
                       >
-                        Submit to Manager for Approval
+                        <i className="fa-solid fa-stamp me-1"></i>
+                        Route to Manager for Approval
                       </button>
                     )}
                     {isProcurement && q.status === "accepted" && (
                       <button
                         onClick={() => handleGeneratePO(q._id)}
-                        className="btn btn-success btn-sm w-100 mb-0 fw-bold"
+                        className="btn-primary-industrial w-100 mt-2"
+                        style={{ backgroundColor: "var(--status-verified)", borderColor: "var(--status-verified)" }}
                       >
-                        <i className="fa-solid fa-file-invoice-dollar me-2"></i> Generate Purchase Order
+                        <i className="fa-solid fa-file-signature me-1"></i>
+                        Commit & Generate PO
                       </button>
                     )}
                     {q.status !== "submitted" && q.status !== "accepted" && (
-                      <div className="alert alert-secondary text-center py-2 mb-0 small fw-bold">
-                        Quotation Status: {q.status?.toUpperCase()}
-                      </div>
-                    )}
-                    {!isProcurement && q.status === "accepted" && (
-                      <div className="alert alert-success text-center py-2 mb-0 small fw-bold">
-                        Quotation Status: {q.status?.toUpperCase()}
+                      <div className="text-center py-2 border rounded-1 bg-light small fw-semibold text-muted">
+                        WORKFLOW STATUS: {q.status?.toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -282,8 +307,8 @@ const Quotations = () => {
               ))}
             </div>
           ) : (
-            <div className="alert alert-info py-4 text-center">
-              No quotations submitted yet for this RFQ. Assigned vendors will see this RFQ in their panels.
+            <div className="p-4 text-center border rounded-1 bg-white text-muted">
+              No quotation bids have been submitted by assigned vendors for this RFQ yet.
             </div>
           )}
         </div>
@@ -291,17 +316,20 @@ const Quotations = () => {
 
       {/* Directory List Mode (If no RFQ selected) */}
       {!selectedRfqId && (
-        <div className="glass-panel p-4">
-          <h5 className="fw-bold mb-4">General Bidding directory</h5>
+        <div className="vendor-grid-wrapper">
+          <div className="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <h6 className="fw-bold mb-0 text-dark">Supplier Quotations Master Register</h6>
+            <span className="text-mono-xs text-muted">ALL COMMERCIAL BIDS</span>
+          </div>
           {quotations.length > 0 ? (
             <div className="table-responsive">
-              <table className="table table-premium align-middle">
+              <table className="table-industrial">
                 <thead>
                   <tr>
-                    <th>Quotation ID</th>
-                    <th>RFQ Reference</th>
-                    <th>Supplier Name</th>
-                    <th>Delivery Lead Time</th>
+                    <th>Quote Ref</th>
+                    <th>RFQ Tender Subject</th>
+                    <th>Supplier Entity</th>
+                    <th>Quoted SLA</th>
                     <th>Total Price Bid</th>
                     <th className="text-end">Status</th>
                   </tr>
@@ -309,22 +337,26 @@ const Quotations = () => {
                 <tbody>
                   {quotations.map((q) => (
                     <tr key={q._id}>
-                      <td className="py-3 small fw-bold">{q._id.substring(18).toUpperCase()}</td>
-                      <td className="py-3">
-                        <div className="fw-semibold">{q.rfqId?.title}</div>
-                        <span className="text-muted small d-block">{q.rfqId?.rfqNumber}</span>
+                      <td className="font-mono text-dark fw-bold">
+                        QTE-{q._id.substring(18).toUpperCase()}
                       </td>
-                      <td className="py-3 fw-bold">{q.vendorId?.vendorName}</td>
-                      <td className="py-3 fw-semibold">{q.deliveryTimeline}</td>
-                      <td className="py-3 text-primary fw-bold">₹{q.totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="py-3 text-end">
+                      <td>
+                        <div className="fw-semibold text-dark">{q.rfqId?.title}</div>
+                        <span className="text-mono-xs text-muted">{q.rfqId?.rfqNumber}</span>
+                      </td>
+                      <td className="fw-semibold text-dark">{q.vendorId?.vendorName}</td>
+                      <td className="font-mono text-muted small">{q.deliveryTimeline}</td>
+                      <td className="font-mono-numbers fw-bold text-dark">
+                        ₹{q.totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-end">
                         <span
-                          className={`badge py-2 px-3 ${
+                          className={`badge-industrial ${
                             q.status === "accepted"
-                              ? "bg-success-subtle text-success"
+                              ? "badge-verified"
                               : q.status === "rejected"
-                              ? "bg-danger-subtle text-danger"
-                              : "bg-warning-subtle text-warning"
+                              ? "badge-risk"
+                              : "badge-pending"
                           }`}
                         >
                           {q.status.toUpperCase()}
@@ -337,8 +369,8 @@ const Quotations = () => {
             </div>
           ) : (
             <div className="text-center text-muted py-5">
-              <i className="fa-regular fa-folder-open fs-2 mb-3 d-block text-muted"></i>
-              No quotations bids submitted in the system.
+              <i className="fa-solid fa-inbox fs-3 mb-2 d-block text-muted"></i>
+              No quotation records found in active procurement database.
             </div>
           )}
         </div>
@@ -346,11 +378,14 @@ const Quotations = () => {
 
       {/* Modal for Routing to Manager Approval */}
       {submitApprovalModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(15,23,42,0.6)" }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content glass-panel border-0">
-              <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold text-dark">Submit Proposal for Approval</h5>
+            <div className="modal-content industrial-card border">
+              <div className="modal-header py-3 px-4 bg-light border-bottom">
+                <div>
+                  <span className="text-mono-xs text-muted d-block">PROPOSAL WORKFLOW</span>
+                  <h6 className="modal-title fw-bold text-dark mb-0">Route Quotation for Manager Authorization</h6>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
@@ -358,44 +393,44 @@ const Quotations = () => {
                 ></button>
               </div>
               <form onSubmit={handleSubmitApproval}>
-                <div className="modal-body py-4">
+                <div className="modal-body p-4">
                   <div className="mb-3">
-                    <label className="form-label small">Select Designated Approver (Manager)</label>
+                    <label className="form-label small">Designated Approver (Manager)</label>
                     <select
-                      className="form-select"
+                      className="form-select form-select-sm font-mono-xs"
                       value={assignedApproverId}
                       onChange={(e) => setAssignedApproverId(e.target.value)}
                       required
                     >
                       {managers.map((m) => (
                         <option key={m._id} value={m._id}>
-                          {m.name}
+                          {m.name} ({m.email})
                         </option>
                       ))}
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label small">Routing Remarks & Comments</label>
+                    <label className="form-label small">Procurement Justification & Remarks</label>
                     <textarea
-                      className="form-control"
+                      className="form-control form-control-sm"
                       rows="3"
-                      placeholder="Why do you recommend this quotation? (Pricing, lead time, reliability...)"
+                      placeholder="Outline cost parity, vendor past performance, compliance checks..."
                       value={approvalRemarks}
                       onChange={(e) => setApprovalRemarks(e.target.value)}
                       required
                     ></textarea>
                   </div>
                 </div>
-                <div className="modal-footer border-top-0 pt-0 d-flex justify-content-end gap-2">
+                <div className="modal-footer py-2 px-4 bg-light border-top d-flex justify-content-end gap-2">
                   <button
                     type="button"
                     onClick={() => setSubmitApprovalModal(false)}
-                    className="btn btn-secondary-custom"
+                    className="btn-secondary-industrial"
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary-custom">
-                    Submit Proposal
+                  <button type="submit" className="btn-primary-industrial">
+                    Authorize & Dispatch Routing
                   </button>
                 </div>
               </form>
