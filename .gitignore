@@ -22,6 +22,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Agent skills and configurations
+.agents/
+.claude/
+.cursor/
+.gemini/
+
 # Production builds
 frontend/dist/
 frontend/dist-ssr/
